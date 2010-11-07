@@ -1,6 +1,6 @@
-Input_file = "test2.txt"
+Input_file = "AllCommunicationPairs_users0Mto100M.txt"
 Output_file = "celebrities.txt"
-Limit = 100
+Limit = 1000
 
 if __FILE__ == $0
   people = {}
