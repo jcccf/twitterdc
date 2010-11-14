@@ -1,5 +1,6 @@
 Input_file = "AllCommunicationPairs_users0Mto100M.txt"
-Celebrity_file = "celebrities.txt"
+#Input_file = "test2.txt"
+celebrity_file = "celebrities.txt"
 Out_prefix = "celeb_"
 Out_suffix = ".txt"
 
@@ -13,8 +14,10 @@ end
 
 if __FILE__ == $0
   
+  celebrity_file = ARGV[0] if ARGV.length > 0
+  
   # For each celebrity
-  cfile = File.new(Celebrity_file,"r")
+  cfile = File.new(celebrity_file,"r")
   while cline = cfile.gets
     cparts = cline.split(' ')
     celeb_id = cparts[0]

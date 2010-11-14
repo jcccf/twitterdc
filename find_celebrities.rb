@@ -1,11 +1,11 @@
-Input_file = "AllCommunicationPairs_users0Mto100M.txt"
-Output_file = "celebrities.txt"
+require 'constants'
+
 Limit = 1000
 
 if __FILE__ == $0
   people = {}
   
-  file = File.new(Input_file,"r")
+  file = File.new(Constants::In_file,"r")
   while line = file.gets
     parts = line.split(' ')
     # puts "%s @ed %s at time %s" % [parts[0], parts[1], parts[3]]
@@ -17,7 +17,7 @@ if __FILE__ == $0
   end
   file.close
   
-  pfile = File.new(Output_file,"w")
+  pfile = File.new(Constants::Celeb_file,"w")
   people.sort { |a,b| a[1] <=> b[1] }.reverse[0,Limit].each do |person|
     pfile.puts "%s %s" % [person[0],person[1]]
   end
