@@ -4,29 +4,29 @@ require 'constants'
 
 if __FILE__ == $0
   
-  Dir.mkdir(Constants::DC_dir+"/img") unless File.directory? Constants::DC_dir+"/img"
+  Dir.mkdir(Constants::AT_dir+"/img") unless File.directory? Constants::AT_dir+"/img"
   
   celebrity_file = ARGV.length > 0 ? ARGV[0] : Constants::Celeb_file
+  celebrity_file = "celebrities_at.txt"
   
   File.open(celebrity_file, "r") do |cfile|
     while line = cfile.gets
       a = line.split[0]
-      dc_file = Constants::DC_dir+"/"+Constants::DC_pref + a + Constants::DC_suff
-      #output_file = Constants::DC_dir+"/img/"+Constants::DC_pref + a + Constants::IM_suff
-      output_file = Constants::DC_dir+"/img/"+Constants::DC_pref + a + "_i" + Constants::IM_suff
+      at_file = Constants::AT_dir+"/"+Constants::AT_pref + a + Constants::AT_suff
+      output_file = Constants::AT_dir+"/img/"+Constants::AT_pref + a + "_n" + Constants::IM_suff
       puts "Building graph for %s" % a
       
       # Build X and Y coordinates
       x, y = Array.new, Array.new
-      File.open(dc_file, "r") do |dcfile|
+      File.open(at_file, "r") do |dcfile|
         count = 0
         while dline = dcfile.gets
           xco, yco = dline.split
-          if count < 16000
+          #if count < 2000
             x << xco.to_f
             y << yco.to_f
             # y << yco.to_f / xco.to_f
-          end
+          #end
           count += 1
         end
       end
@@ -38,7 +38,8 @@ if __FILE__ == $0
         cu += y[i]
         if i >= 100
           xp << i - 50
-          yp << (cu / 100.0) / x[i]
+          # yp << (cu / 100.0) / x[i]
+          yp << (cu / 100.0)
           cu -= y[i-100]
         end
       end
@@ -49,9 +50,9 @@ if __FILE__ == $0
           
           plot.term 'pngcairo size 600,300'
 
-          plot.title  "Directed Closure for %s" % a
-          plot.xlabel "Number of @s"
-          plot.ylabel "Directed Closures Ratio"
+          plot.title  "@ Mentions for %s" % a
+          plot.xlabel "Total Number of @s"
+          plot.ylabel "Number of @s for this person"
 
           #x = (0..50).collect { |v| v.to_f }
           #y = x.collect { |v| v ** 2 }

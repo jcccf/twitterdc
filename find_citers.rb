@@ -1,5 +1,5 @@
-Input_file = "AllCommunicationPairs_users0Mto100M.txt"
-#Input_file = "test2.txt"
+#Input_file = "AllCommunicationPairs_users0Mto100M.txt"
+Input_file = "test2.txt"
 celebrity_file = "celebrities.txt"
 Out_prefix = "celeb_"
 Out_suffix = ".txt"
