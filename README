@@ -1,0 +1,61 @@
+Readme for Twitter Directed Closure
+===================================
+
+Definitions
+===========
+Fan
+	Person who cites a celebrity
+	
+Fan subgraph
+	Graph of people who cite a certain celebrity, excluding the celebrity
+
+Prerequisites
+=============
+1. Run find_celebrities.rb to generate a list of the most highly cited people in the graph
+2. Run find_citers.rb to generate the list of people who cited these celebrities for each celebrity
+
+Graph Property Calculations
+===========================
+find_ats_over_time.rb
+	Calculate the number of @s a celebrity gets over time
+
+find_dc.rb
+	Calculate the directed closure as more people cite a celebrity
+
+find_outdegree.rb
+	Calculate the total outdegree as more people cite a celebrity
+	
+find_outdegree_median.rb
+	Calculate the median outdegree of the fan subgraph as it grows
+	
+find_sccomponent.rb
+	Calculate the size of the strongly connected component of the directed fan subgraph as it grows
+	
+find_triangles.rb
+	Calculate the number of triangles and the number of 2 step paths of the undirected fan subgraph
+	
+find_ucomponent.rb
+	Calculate the size of the largest component of the undirected fan subgraph as it grows
+	
+Helper Files
+============
+adj_graph.rb
+	Implementation of a graph using an adjacency list
+	Also has an implementation of Trajan's algorithm for finding strongly connected components of a graph
+	
+constants.rb
+	Keeps track of types of file names
+	
+disjoint_set.rb
+	Implementation of disjoint sets
+	Used to find the size of a connected component of a graph
+	
+ordered_triple.rb
+	Implementation of ordered triples
+	Used to store 2 step paths and triangles
+
+
+Other Stuff
+===========
+How to take the first 100 characters of each line of a file
+cut -c 1-100 celeb_19058681_uc.txt >> celeb_19058681_uc_cut.txt

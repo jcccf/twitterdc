@@ -9,6 +9,11 @@ module Constants
   CI_suff = ".txt"
   CI_limit = 20000
   
+  # Citer Graph Files
+  CG_pref = "celebgraph_"
+  CG_suff = ".txt"
+  CG_dir = "celeb_graphs"
+  
   # DC files
   DC_pref = "celeb_"
   DC_suff = "_dc.txt"
