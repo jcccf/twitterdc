@@ -14,6 +14,7 @@ module Constants
   CG_suff = ".txt"
   CG_dir = "celeb_graphs"
   
+  
   # DC files
   DC_pref = "celeb_"
   DC_suff = "_dc.txt"
@@ -42,8 +43,10 @@ module Constants
   SC_suff = "_sc.txt"
   SC_dir = "sccomponent"
   
+  # Graphing constants
+  Graph_basedir = "/Volumes/MCCARD/graphs"
   # Image
-  IM_suff = "_dc.png"
+  IM_suff = ".png"
   
   # Find Ats over Time
   AT_pref = "celeb_"

@@ -10,6 +10,10 @@ class AdjGraph
     @tg_index = {}
     @tg_lowlink = {}
     @t_result = []
+    
+    @t_pstack = []
+    @t_forindex = Hash.new(0)
+    @t_onstack = Hash.new(false)
   end
   
   def add_node(id)
@@ -17,7 +21,7 @@ class AdjGraph
   end
   
   def add_directed_edge(id1,id2)
-    @g[id1] ||= Set.new
+    @g[id1] ||= Array.new
     @g[id1] << id2
   end
   
@@ -34,6 +38,25 @@ class AdjGraph
     @tg_index = {}
     @tg_lowlink = {}
     @t_result = []
+    
+    @t_pstack = []
+    @t_forindex = Hash.new(0)
+    @t_onstack = Hash.new(false)
+    @g.each_key do |k|
+      if @tg_index[k] == nil
+        tarjan_iter(k)
+      end
+    end
+    @t_result.sort!.reverse!
+  end
+  
+  def tarjan_recursive
+    @t_index = 0
+    @t_stack = []
+    @tg_index = {}
+    @tg_lowlink = {}
+    @t_result = []
+
     @g.each_key do |k|
       if @tg_index[k] == nil
         tarjan_helper(k)
@@ -82,11 +105,79 @@ class AdjGraph
     end
   end
   
+  def tarjan_iter(v)
+    @t_pstack.push v
+    
+    while @t_pstack.size > 0
+      v = @t_pstack.last
+      
+      #puts "v is %d" % v
+      
+      # Same as first part of tarjan_helper
+      if @tg_index[v] == nil
+        @tg_index[v] = @t_index
+        @tg_lowlink[v] = @t_index
+        @t_index += 1
+        @t_stack.push v
+      end
+      
+      if @g[v] != nil 
+        
+        if @t_onstack[@g[v][@t_forindex[v]]]
+          #puts "onstack %d" % @g[v][@t_forindex[v]]
+          @t_onstack[@g[v][@t_forindex[v]-1]] = false
+          @tg_lowlink[v] = [@tg_lowlink[v],@tg_lowlink[@g[v][@t_forindex[v]]]].min
+        end
+        
+        while @t_forindex[v] < @g[v].size
+          vp = @g[v][@t_forindex[v]]
+          #puts "looking at vp %d" % vp
+
+          if @tg_index[vp] == nil
+            @t_onstack[vp] = true
+            @t_pstack.push vp
+            break
+          end
+          
+          if @t_stack.include?(vp)
+            @tg_lowlink[v] = [@tg_lowlink[v],@tg_index[vp]].min
+          end
+          
+          @t_forindex[v] += 1
+        end
+        
+        if @t_forindex[v] == @g[v].size
+          @t_pstack.pop
+          tarjan_iter_end(v)
+        end
+      else
+        @t_pstack.pop
+        tarjan_iter_end(v)
+      end
+    end
+  end
+  
+  def tarjan_iter_end(v)
+    if @tg_index[v] == @tg_lowlink[v]
+      #print "SCC:"
+      count = 0
+      begin
+        vq = @t_stack.pop
+        #print vq
+        count += 1
+      end while vq != v
+
+      @t_result << count
+    end
+  end
+  
 end
 
 # a = AdjGraph.new
 # a.add_directed_edge(1,2)
 # a.add_directed_edge(2,3)
 # a.add_directed_edge(3,1)
-# a.add_directed_edge(2,4)
+# a.add_directed_edge(4,1)
+# a.add_directed_edge(4,5)
+# a.add_directed_edge(5,4)
 # puts a.tarjan_string_limit(1000)

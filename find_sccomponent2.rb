@@ -27,7 +27,7 @@ if __FILE__ == $0
       running_count = 0
       citer_graph = AdjGraph.new
       seen = Hash.new
-      ofile = File.new(output_file, "w")
+      ofile = File.new(output_file+"~", "w")
       file = File.new(citers_file, "r")
       while line = file.gets
         parts = line.split(' ')
@@ -54,6 +54,7 @@ if __FILE__ == $0
       end
       file.close
       ofile.close
+      File.rename(output_file+"~",output_file)
       print "\n\n"
     end
   end
