@@ -41,6 +41,23 @@ def getXY(input_file)
   [x,y]  
 end
 
+def getXYZ(input_file)
+  x, y, z = Array.new, Array.new, Array.new
+  File.open(input_file, "r") do |dcfile|
+    count = 0
+    while dline = dcfile.gets
+      xco, yco, zco = dline.split
+      if count < 16000
+        x << xco.to_f
+        y << yco.to_f
+        z << zco.to_f
+      end
+      count += 1
+    end
+  end
+  [x,y,z]  
+end
+
 def buildPlots(prop_dir, name, xlabel, ylabel)
   input_dir = Constants::Graph_basedir+"/"+prop_dir
   output_dir = Constants::Graph_basedir+"/"+prop_dir+"_img"
@@ -58,6 +75,28 @@ def buildPlots(prop_dir, name, xlabel, ylabel)
     
     # Building Sliding X and Y
     xp, yp = yield(x,y)
+    
+    doPlot("%s for %s" % [name, fname.split('.')[0]], xlabel, ylabel, xp, yp, output_file)
+  end  
+end
+
+def buildPlotsZ(prop_dir, name, xlabel, ylabel)
+  input_dir = Constants::Graph_basedir+"/"+prop_dir
+  output_dir = Constants::Graph_basedir+"/"+prop_dir+"_img"
+  
+  puts "Invalid input directory" unless File.directory? input_dir
+  Dir.mkdir(output_dir) unless File.directory? output_dir
+  Dir.chdir(input_dir)
+  Dir.glob('*') do |fname|
+    input_file = input_dir+"/"+fname
+    output_file = output_dir+'/'+fname.split('.')[0] + Constants::IM_suff
+    puts "Building %s graph for %s" % [name, input_file]
+    
+    # Build X and Y coordinates
+    x, y, z = getXYZ(input_file)
+    
+    # Building Sliding X and Y
+    xp, yp = yield(x,y,z)
     
     doPlot("%s for %s" % [name, fname.split('.')[0]], xlabel, ylabel, xp, yp, output_file)
   end  
@@ -115,6 +154,37 @@ if __FILE__ == $0
         xp << i - 50
         yp << (cu / 100.0) / x[i]
         cu -= y[i-100]
+      end
+    end
+    [xp, yp]
+  end
+  
+  buildPlots(Constants::TR_dir,"Undirected Triangles", "Number of fans (n)", "Undirected Triangles/n") do |x,y|
+    xp, yp = Array.new, Array.new
+    cu = 0
+    x.each_with_index do |xv,i|
+      cu += y[i]
+      if i >= 100
+        xp << i - 50
+        yp << (cu / 100.0) / x[i]
+        cu -= y[i-100]
+      end
+    end
+    [xp, yp]
+  end
+  
+  buildPlotsZ(Constants::TR2_dir,"Undirected Triangles and 2 Step Paths", "Number of fans (n)", "Undirected Triangles/2 step paths") do |x,y,z|
+    xp, yp = Array.new, Array.new
+    cu = 0
+    cu2 = 0
+    x.each_with_index do |xv,i|
+      cu += y[i]
+      cu2 += z[i]
+      if i >= 100
+        xp << i - 50
+        yp << (cu / 100.0) / (cu2 / 100.0)
+        cu -= y[i-100]
+        cu2 -= z[i-100]
       end
     end
     [xp, yp]
