@@ -69,7 +69,7 @@ if __FILE__ == $0
         # Find any triangles or 2 step paths containing curr
         seen.each do |s|
           if citers[curr] != nil && citers[curr][s] != nil
-            citers[curr].each do |k,_|
+            citers[curr].each_key do |k|
               if k != s
                 if citers[k] != nil && citers[k][s] != nil
                   triangles.add(curr,s,k)
