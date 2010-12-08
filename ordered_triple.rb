@@ -15,6 +15,20 @@ class OrderedTriple
     end
   end
   
+  def add13Same(e1,e2,e3)
+    s0, s3 = [e1,e3].sort
+    @h[s0] ||= {}
+    @h[s0][e2] ||= {}
+    if !@h[s0][e2][s3]
+      @h[s0][e2][s3] = true
+      @count += 1
+    end
+  end
+  
+  def resetHash
+    @h = {}
+  end
+  
   def count
     @count
   end
