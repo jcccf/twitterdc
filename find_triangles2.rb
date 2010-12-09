@@ -2,6 +2,55 @@ require File.join(File.dirname(__FILE__), 'constants')
 require File.join(File.dirname(__FILE__), 'citer_functions')
 require File.join(File.dirname(__FILE__), 'ordered_triple')
 
+class FindTriangle
+  def initialize(citers)
+    @citers = citers
+    @running_count = 0
+    @seen = Hash.new
+    @triangles = OrderedTriple.new
+    @steppaths = OrderedTriple.new
+  end
+  
+  def iterate(curr)
+    #puts "curr is #{curr}"
+    #puts "seen is #{seen.inspect}"
+    
+    seen_curr = Hash.new
+    if @citers[curr]
+      @citers[curr].each_key do |c| # For each node adjacent to curr
+        if @seen[c] 
+          # When curr is at the end of a 2 step path
+          if @citers[c]
+            @citers[c].each_key do |k| # For each node adjacent to each node adjacent to curr
+              if @seen[k] && k != curr
+                if @citers[k][curr] # There is a triangle
+                  @triangles.add(curr,c,k)
+                  @steppaths.add13Same(c,k,curr)
+                  @steppaths.add13Same(k,curr,c)
+                end
+                #puts "adding #{curr} #{c} #{k}"
+                @steppaths.add13Same(curr,c,k) # There is a 3 step path
+              end
+            end
+          end
+
+          # When curr is in the middle of a 2 step path
+          seen_curr.each_key do |ck|
+            @steppaths.add13Same(c,curr,ck)
+          end
+          seen_curr[c] = true
+        end
+      end
+    end
+
+    @seen[curr] = true
+    @running_count += 1
+    @steppaths.resetHash
+    
+    return @running_count, @triangles.count, @steppaths.count
+  end
+end
+
 if __FILE__ == $0
   
   Dir.mkdir(Constants::TR_dir) unless File.directory? Constants::TR_dir
@@ -28,62 +77,24 @@ if __FILE__ == $0
       #puts citers.inspect
       
       # Count outdegree for each person up to person n
-      ofile = File.new(output_file, "w")
-      ofile2 = File.new(output_file2, "w")
+      ofile = File.new(output_file+"~", "w")
+      ofile2 = File.new(output_file2+"~", "w")
       file = File.new(citers_file, "r")
       
-      running_count = 0
-      seen = Hash.new
-      triangles = OrderedTriple.new
-      steppaths = OrderedTriple.new
+      ft = FindTriangle.new(citers)
       
       while line = file.gets
         curr = line.split(' ')[0].to_i
         
-        #puts "curr is #{curr}"
-        #puts "seen is #{seen.inspect}"
-        
-        seen_curr = Hash.new
-        if citers[curr]
-          citers[curr].each_key do |c| # For each node adjacent to curr
-            if seen[c] 
-              # When curr is at the end of a 2 step path
-              if citers[c]
-                citers[c].each_key do |k| # For each node adjacent to each node adjacent to curr
-                  if seen[k] && k != curr
-                    if citers[k][curr] # There is a triangle
-                      triangles.add(curr,c,k)
-                      steppaths.add13Same(c,k,curr)
-                      steppaths.add13Same(k,curr,c)
-                    end
-                    #puts "adding #{curr} #{c} #{k}"
-                    steppaths.add13Same(curr,c,k) # There is a 3 step path
-                  end
-                end
-              end
-
-              # When curr is in the middle of a 2 step path
-              seen_curr.each_key do |ck|
-                steppaths.add13Same(c,curr,ck)
-              end
-              seen_curr[c] = true
-
-            end
-          end
-        end
-
-        seen[curr] = true
-        running_count += 1
-
-        steppaths.resetHash
+        rc, tc, sc = ft.iterate(curr)
         
         # Print to file
-        ofile.puts "%d %d" % [running_count, triangles.count]
-        ofile2.puts "%d %d %d" % [running_count, triangles.count, steppaths.count]
+        ofile.puts "%d %d" % [rc, tc]
+        ofile2.puts "%d %d %d" % [rc, tc, sc]
         
-        print running_count.to_s + "\t"
+        print "%d\t" % rc
         
-        if running_count >= Constants::CI_limit
+        if rc >= Constants::CI_limit
           break
         end
       end
@@ -91,6 +102,8 @@ if __FILE__ == $0
       file.close
       ofile.close
       ofile2.close
+      File.rename(output_file+"~",output_file)
+      File.rename(output_file2+"~",output_file2)
       print "\n\n"
       
     end

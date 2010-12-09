@@ -63,7 +63,7 @@ cut_files.rb
 Test Files
 ==========
 test_*.rb
-	Test functionality of specific scripts. Poorly implemented right now.
+	Test functionality of specific scripts.
 
 
 Other Stuff
