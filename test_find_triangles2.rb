@@ -5,10 +5,6 @@ class TestFindTriangles2 < Test::Unit::TestCase
   
   def citerFunction(cite, citers)
     str = ""
-    running_count = 0
-    seen = Hash.new
-    triangles = OrderedTriple.new
-    steppaths = OrderedTriple.new
     ft = FindTriangle.new(citers)
     cite.each do |curr|
       rc, tc, sc = ft.iterate(curr)

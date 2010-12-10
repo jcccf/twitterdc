@@ -31,10 +31,10 @@ def getXY(input_file)
     count = 0
     while dline = dcfile.gets
       xco, yco = dline.split
-      if count < 16000
-        x << xco.to_f
-        y << yco.to_f
-      end
+      #if count < 16000
+      x << xco.to_f
+      y << yco.to_f
+      #end
       count += 1
     end
   end
@@ -47,11 +47,11 @@ def getXYZ(input_file)
     count = 0
     while dline = dcfile.gets
       xco, yco, zco = dline.split
-      if count < 16000
-        x << xco.to_f
-        y << yco.to_f
-        z << zco.to_f
-      end
+      #if count < 16000
+      x << xco.to_f
+      y << yco.to_f
+      z << zco.to_f
+      #end
       count += 1
     end
   end
