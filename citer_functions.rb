@@ -101,6 +101,45 @@ class CiterFunctions
     print "done\n"
   end
   
+  def build_directed_citer_graph_time
+    if @citer_list.size == 0
+      build_citer_list
+    end
+    @citers = Hash.new()
+    
+    print "Building directed citer graph in memory..."
+    if File.exist?(@citers_graph_file)
+      print "Using graph file..."
+      File.open(@citers_graph_file) do |file|
+        while line = file.gets
+          parts = line.split
+          c = parts[0].to_i
+          d = parts[1].to_i
+          t = parts[2].to_i
+          if citer_list[c] != nil && citer_list[d] != nil
+            citers[c] ||= Hash.new()
+            citers[c][d] = t
+          end
+        end
+      end
+    else
+      print "Graph file doesn't exist, using input file..."
+      File.open(@in_file) do |file|
+        while line = file.gets
+          parts = line.split
+          c = parts[0].to_i
+          d = parts[1].to_i
+          t = parts[2].to_i
+          if citer_list[c] != nil && citer_list[d] != nil
+            citers[c] ||= Hash.new()
+            citers[c][d] = t
+          end
+        end
+      end
+    end
+    print "done\n"
+  end
+  
   def build_undirected_citer_graph
     if @citer_list.size == 0
       build_citer_list

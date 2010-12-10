@@ -1,7 +1,7 @@
 module Constants
   # Base constants
-  #In_file = "AllCommunicationPairs_users0Mto100M.txt"
-  In_file = "test2.txt"
+  In_file = "AllCommunicationPairs_users0Mto100M.txt"
+  #In_file = "test2.txt"
   Celeb_file = "celebrities.txt"
   
   # Cite Files

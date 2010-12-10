@@ -189,4 +189,18 @@ if __FILE__ == $0
     end
     [xp, yp]
   end
+  
+  buildPlots(Constants::SC_dir,"Size of Strongly Connected Component", "Number of fans", "Size of Strongly Connected Component") do |x,y|
+    xp, yp = Array.new, Array.new
+    cu = 0
+    x.each_with_index do |xv,i|
+      cu += y[i]
+      if i >= 100
+        xp << i - 50
+        yp << (cu / 100.0)
+        cu -= y[i-100]
+      end
+    end
+    [xp, yp]
+  end
 end

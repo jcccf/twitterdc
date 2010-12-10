@@ -29,13 +29,13 @@ find_outdegree.rb
 find_outdegree_median.rb
 	Calculate the median outdegree of the fan subgraph as it grows
 	
-find_sccomponent.rb (and 2.rb, optimized)
+find_sccomponent2.rb
 	Calculate the size of the strongly connected component of the directed fan subgraph as it grows
 	
 find_triangles2.rb
 	Calculate the number of triangles and the number of 2 step paths of the undirected fan subgraph
 	
-find_ucomponent.rb (and 2.rb, optimized)
+find_ucomponent.rb
 	Calculate the size of the largest component of the undirected fan subgraph as it grows
 	
 Helper Files
