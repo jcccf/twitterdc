@@ -11,14 +11,16 @@ class FindDirectedClosure
   
   def iterate(curr,time)
     found = 0
-    @seen.each do |s|
-      if @citers[s] && @citers[s][curr] && @citers[s][curr] < time
-        found += 1
+    if @citers[curr]
+      @seen.each do |s|
+        if @citers[curr][s] && @citers[curr][s] < time
+          found += 1
+        end
       end
-    end
-    if found > 0
-      print "."
-      @dc_count += 1
+      if found > 0
+        print "."
+        @dc_count += 1
+      end
     end
     @seen << curr
     @running_count += 1

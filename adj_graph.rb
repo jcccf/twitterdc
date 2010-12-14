@@ -16,6 +16,10 @@ class AdjGraph
     @t_onstack = Hash.new(false)
   end
   
+  def assert
+    raise "Assertion failed !" unless yield
+  end
+  
   def add_node(id)
     @g[id] = Set.new
   end
@@ -121,12 +125,14 @@ class AdjGraph
         @t_stack.push v
       end
       
-      if @g[v] != nil 
+      if @g[v] != nil
         
-        if @t_onstack[@g[v][@t_forindex[v]]]
-          #puts "onstack %d" % @g[v][@t_forindex[v]]
-          @t_onstack[@g[v][@t_forindex[v]-1]] = false
-          @tg_lowlink[v] = [@tg_lowlink[v],@tg_lowlink[@g[v][@t_forindex[v]]]].min
+        if @t_onstack[v]
+          vp = @g[v][@t_forindex[v]]
+          assert{@tg_index[vp] != nil}
+          @t_onstack.delete(v)
+          @tg_lowlink[v] = [@tg_lowlink[v],@tg_lowlink[vp]].min
+          @t_forindex[v] += 1
         end
         
         while @t_forindex[v] < @g[v].size
@@ -134,7 +140,7 @@ class AdjGraph
           #puts "looking at vp %d" % vp
 
           if @tg_index[vp] == nil
-            @t_onstack[vp] = true
+            @t_onstack[v] = true # Means that v is waiting for a recursive reply
             @t_pstack.push vp
             break
           end

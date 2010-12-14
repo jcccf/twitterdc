@@ -63,7 +63,6 @@ if __FILE__ == $0
             curr = line.split[0].to_i
             
             rc, ta = sc.iterate(curr)
-            
             ofile.puts "%d %s" % [rc, ta]
             print "."
             if rc >= Constants::CI_limit

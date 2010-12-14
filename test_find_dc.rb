@@ -23,19 +23,25 @@ class TestFindDC < Test::Unit::TestCase
   def test_simple_graph2
     citers = {1=>{}, 2=>{1=>2}, 3=>{}, 4=>{}}
     cite = {1=>1, 2=>3, 3=>4, 4=>5}
-    assert_equal("1 0\n2 0\n3 0\n4 0\n", citerFunction(cite,citers))
+    assert_equal("1 0\n2 1\n3 1\n4 1\n", citerFunction(cite,citers))
   end
   
   def test_simple_graph3
     citers = {1=>{}, 2=>{1=>2}, 3=>{1=>4}, 4=>{}}
     cite = {1=>1, 2=>3, 3=>5, 4=>6}
-    assert_equal("1 0\n2 0\n3 0\n4 0\n", citerFunction(cite,citers))
+    assert_equal("1 0\n2 1\n3 2\n4 2\n", citerFunction(cite,citers))
   end
   
   def test_simple_graph4
     citers = {1=>{3=>2}, 2=>{}, 3=>{1=>4}, 4=>{}}
     cite = {1=>1, 2=>3, 3=>5, 4=>6}
     assert_equal("1 0\n2 0\n3 1\n4 1\n", citerFunction(cite,citers))
+  end
+  
+  def test_simple_graph5
+    citers = {1=>{3=>2}, 2=>{}, 3=>{4=>1}, 4=>{}}
+    cite = {1=>1, 2=>3, 3=>5, 4=>6}
+    assert_equal("1 0\n2 0\n3 0\n4 0\n", citerFunction(cite,citers))
   end
   
 end
