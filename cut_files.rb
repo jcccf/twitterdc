@@ -1,4 +1,4 @@
-input_dir = "ucomponent"
+input_dir = "data/ucomponent"
 
 Dir.chdir(input_dir)
 Dir.glob('*') do |fname|

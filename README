@@ -72,3 +72,5 @@ How to take the first 100 characters of each line of a file
 cut -c 1-100 celeb_19058681_uc.txt >> celeb_19058681_uc_cut.txt
 
 less celeb_27104736_tr.txt  | awk '{print $1, $2 - x; x = $2} ' | awk '$2 > 100' | less
+find . -type f -name "*27104736*png" -exec open {} \;
+find . -type f -name "*27104736*png" -print0 | xargs -0 open
