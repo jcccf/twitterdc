@@ -43,4 +43,11 @@ class TestAtMessages < Test::Unit::TestCase
     assert_file_equal("15\t20\t1\t3\n14\t20\t1\t5\n14\t16\t1\t7\n15\t10\t1\t9\n14\t15\t1\t10\n","tmp.dat")
   end
   
+  def test_reciprocated_unreciprocated
+    am = AtMessages.new("../test/data/atmessages_graph.dat", 3)
+    am.build_graph
+    am.to_file("tmp.dat", "tmp2.dat")
+    assert_file_equal("10 11\n10 13\n11 10\n13 10\n","tmp.dat")
+    assert_file_equal("14 15\n13 14\n","tmp2.dat")
+  end  
 end
