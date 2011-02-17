@@ -1,9 +1,15 @@
+# For graphs where each node has sent more than n messages
+# Find the subgraphs for which
+# => Each node has at least sent k messages to another and vice versa
+# => Each node has sent at least k messages to another but the other did not respond at all
+
 require_relative "../atmessages.rb"
 
-k = ARGV.length > 0 ? ARGV[0] : 10
+n = (ARGV.length > 0 ? ARGV[0] : 100).to_i
+k = (ARGV.length > 1 ? ARGV[1] : 10).to_i
+k2 = (ARGV.length > 2 ? ARGV[2] : k).to_i
 
-am = AtMessages.new("../../data/atmessages_graph_100.txt",k)
-puts "Building Graph for #{k}..."
+am = AtMessages.new("../../AllCommunicationPairs_users0Mto100M.txt","../../data",n,k,k2)
+
+puts "Building Graph and separating for #{n}, #{k} to #{k2}..."
 am.build_graph
-puts "Separating into Reciprocated and Unreciprocated Graphs for #{k}..."
-am.to_file("../../data/atmessages_graph_100_"+sprintf("%03d",k)+"_rec.txt","../../data/atmessages_graph_100_"+sprintf("%03d",k)+"_unr.txt")
