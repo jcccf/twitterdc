@@ -84,12 +84,15 @@ class AtMessages
   def build_graph
     raise RuntimeError, "Call filter_graph_by_users before build_graph" unless File.exist? @graph_filename
     
+    c = 0
     File.open(@graph_filename,"r").each do |l|
       parts = l.split(' ',4)
       sender, receiver, count = parts[0].to_i, parts[1].to_i, parts[2].to_i
       people[sender] ||= {}
       people[sender][receiver] ||= 0
       people[sender][receiver] += count
+      print "." if c % 1000 == 0
+      c += 1
     end
     
     @k.upto(@k2) do |i|
@@ -136,6 +139,63 @@ class AtMessages
     
       File.rename(@unr_scc_filename+"~", @unr_scc_filename)
     end
+  end
+  
+  def degree_agreement_with_generated_graphs(min,max,step)
+    raise ArgumentError, "0.0 < e < 1.0" if (min > 100 || min < 0 || max > 100 || max < 0 || max-min < 0)
+    
+    puts "Loading Degrees..."
+    degrees = {}
+    File.open(@people_filename,"r").each do |l|
+      id,count = l.split
+      id = id.to_i
+      count = count.to_f
+      degrees[id] = count
+    end
+    
+    i = min
+    begin
+      puts "Agreement testing for #{i}"
+      
+      e = i/100.0
+      e_inv = 1/e
+      
+      @rec_unr_agree_filename = @base_dir+"/atmsg_graph_"+sprintf("%03d",@n)+"_agreement_p#{i}.txt"
+    
+      File.open(@rec_unr_agree_filename+"~","w") do |f|
+        @k.upto(@k2) do |i|
+          match, unmatch, match2, unmatch2 = 0, 0, 0, 0
+          @rec_filename = @base_dir+"/atmsg_graph_"+sprintf("%03d",@n)+"_"+sprintf("%03d",i)+"_rec.txt"
+          @unr_filename = @base_dir+"/atmsg_graph_"+sprintf("%03d",@n)+"_"+sprintf("%03d",i)+"_unr.txt"
+          
+          File.open(@rec_filename,"r").each do |l|
+            id1,id2 = l.split.map{ |x| x.to_i }
+            ratio = degrees[id1]/degrees[id2]
+            if e <= ratio && ratio <= e_inv
+              match += 1
+            else
+              unmatch += 1
+            end
+          end
+
+          File.open(@unr_filename,"r").each do |l|
+            id1,id2 = l.split.map{ |x| x.to_i }
+            ratio = degrees[id1]/degrees[id2]
+            if ratio < e || e_inv < ratio
+              match2 += 1
+            else
+              unmatch2 += 1
+            end
+          end
+          ratio = (match+unmatch > 0) ? match/(match+unmatch).to_f : 0
+          ratio2 = (match2+unmatch2 > 0) ? match2/(match2+unmatch2).to_f : 0
+          f.puts "%d %.4f %.4f %d %d %d %d" % [i, ratio, ratio2, match/2, unmatch/2, match2, unmatch2] # Divide by 2 since we count reciprocated matches twice
+        end
+      end
+    
+      File.rename(@rec_unr_agree_filename+"~", @rec_unr_agree_filename)
+      i += step
+    end while i <= max
   end
   
   private
