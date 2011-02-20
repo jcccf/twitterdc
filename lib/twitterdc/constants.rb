@@ -35,6 +35,14 @@ module TwitterDc
       end
     end
     
+    def unreciprocated_pred_deg(eye)
+      @base+"/atmsg_graph_"+sprintf("%03d",@n)+"_unr_pred_deg_"+sprintf("%03d",eye)+".txt"
+    end
+    
+    def reciprocated_pred_deg(eye)
+      @base+"/atmsg_graph_"+sprintf("%03d",@n)+"_rec_pred_deg_"+sprintf("%03d",eye)+".txt"
+    end
+    
     def unreciprocated_node_count
       @base+"/atmsg_graph_"+sprintf("%03d",@n)+"_"+sprintf("%03d",@k)+"-"+sprintf("%03d",@k2)+"_unr_ncount.txt"
     end

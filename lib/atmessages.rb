@@ -4,6 +4,7 @@ require 'yaml'
 require_relative 'forestlib/adj_graph'
 require_relative 'forestlib/plotter'
 require_relative 'forestlib/counter'
+require_relative 'forestlib/processor'
 require_relative 'twitterdc/constants'
 include ForestLib
 include TwitterDc
@@ -147,8 +148,8 @@ class AtMessages
     end
   end
   
-  # Count the degrees of each node in the reciprocated and unreciprocated subgraphs
-  def count_degrees_rec_unr
+  # Count the number of nodes in the reciprocated and unreciprocated subgraphs
+  def count_nodes_rec_unr
     File.open(@c.reciprocated_node_count, "w") do |r|
       File.open(@c.unreciprocated_node_count, "w") do |u|
         @c.reciprocated do |i,rec_filename|
@@ -187,6 +188,38 @@ class AtMessages
     end
   end
   
+  # Build the reciprocated and unreciprocated subgraphs based on the degrees of the original
+  # graph, and looking at the ratio e
+  # Note! The reciprocated subgraph DOES NOT repeat edges!
+  def build_prediction_on_degree(min,max,step)
+    degrees = Processor.to_hash_float(@people_deg_filename)
+    puts degrees.inspect
+    (min..max).step(step) do |i|
+      
+      puts "Building for #{i}"
+      
+      e = i/100.0
+      e_inv = 1/e
+      
+      File.open(@c.reciprocated_pred_deg(i)+"~","w") do |r|
+        File.open(@c.unreciprocated_pred_deg(i)+"~","w") do |u|
+          File.open(@people_edge_filename, "r").each do |l|
+            id1,id2 = l.split.map{ |x| x.to_i }
+            ratio = degrees[id1]/degrees[id2]
+            puts ratio
+            if e <= ratio && ratio <= e_inv
+              r.puts l
+            else
+              u.puts l
+            end
+          end
+        end
+      end
+      File.rename(@c.reciprocated_pred_deg(i)+"~",@c.reciprocated_pred_deg(i))
+      File.rename(@c.unreciprocated_pred_deg(i)+"~",@c.unreciprocated_pred_deg(i))
+    end
+  end
+  
   # Compare how a prediction based on degree or message count compares with the reciprocated and
   # unreciprocated subgraphs generated
   def degree_agreement_with_generated_graphs(min,max,step,type = :degree)
@@ -207,8 +240,7 @@ class AtMessages
       degrees[id] = count
     end
     
-    i = min
-    begin
+    (min..max).step(step) do |i|
       puts "Agreement testing for #{i}"
       
       e = i/100.0
@@ -242,23 +274,25 @@ class AtMessages
           end
           ratio = (match+unmatch > 0) ? match/(match+unmatch).to_f : 0
           ratio2 = (match2+unmatch2 > 0) ? match2/(match2+unmatch2).to_f : 0
-          f.puts "%d %.4f %.4f %d %d %d %d" % [i, ratio, ratio2, match/2, unmatch/2, match2, unmatch2] # Divide by 2 since we count reciprocated matches twice
+          # Divide by 2 below since we count reciprocated matches twice
+          f.puts "%d %.4f %.4f %d %d %d %d" % [i, ratio, ratio2, match/2, unmatch/2, match2, unmatch2] 
         end
       end
     
       File.rename(agree_filename+"~", agree_filename)
-      i += step
-    end while i <= max
+    end
   end
   
   # Plot the strongly connected component counts on a chart
   def plot_scc_graphs
     Dir.mkdir @c.images_dir unless File.directory? @c.images_dir
     
+    ybase = Processor.to_hash(@c.unreciprocated_node_count)
+    
     xp,yp = [],[]
     @c.scc_of_unreciprocated do |i,f|
       xp << i.to_f
-      yp << File.read(f).split(" ",2)[0].to_f
+      yp << File.read(f).split(" ",2)[0].to_f / ybase[i].to_f
     end
     Plotter.plot("SCC for Unreciprocated","Threshold","Size of Largest SCC",xp,yp,@c.scc_of_unreciprocated_image)
   end
@@ -266,6 +300,7 @@ class AtMessages
   private
   
   # Output the subgraphs containing only reciprocated edges and only unreciprocated edges
+  # NOTE! the graph of reciprocated edges DOES contain repeated edges!
   def to_file(i)
     raise RuntimeError, "Call build_graph before to_file" unless @people.count > 0 #Sanity check
     

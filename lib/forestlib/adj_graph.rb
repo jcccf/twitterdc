@@ -3,6 +3,17 @@ require 'set'
 module ForestLib
   
   # Representation of a graph using adjacency lists (and hashes)
+  # Example:
+  #   a = AdjGraph.new
+  #   a.add_directed_edge(1,2)
+  #   a.add_directed_edge(2,3)
+  #   a.add_directed_edge(3,1)
+  #   a.add_directed_edge(4,1)
+  #   a.add_directed_edge(4,5)
+  #   a.add_directed_edge(5,4)
+  #   a.add_directed_edge(1,5)
+  #   a.add_directed_edge(1,6)
+  #   puts a.tarjan_string_limit(1000)
   
   class AdjGraph
     def initialize
@@ -191,14 +202,3 @@ module ForestLib
   
   end
 end
-
-# a = AdjGraph.new
-# a.add_directed_edge(1,2)
-# a.add_directed_edge(2,3)
-# a.add_directed_edge(3,1)
-# a.add_directed_edge(4,1)
-# a.add_directed_edge(4,5)
-# a.add_directed_edge(5,4)
-# a.add_directed_edge(1,5)
-# a.add_directed_edge(1,6)
-# puts a.tarjan_string_limit(1000)
