@@ -44,8 +44,10 @@ class TestAtMessages < Test::Unit::TestCase
     @atm.filter_users_by_messages
     @atm.filter_graph_by_users
     @atm.build_graph
+    @atm.find_degrees_edges
     @atm.find_scc
     @atm.degree_agreement_with_generated_graphs(80,85,5)
+    @atm.count_degrees_rec_unr
     assert_file_equal("10\t11\t4\t1 2 3 4\n14  15  3 1123123 13123 12312\n11  10\t4\t12312312 12313 123 232\n10  13\t3\t8123123 123 12312 3\n13  10  3 11123123 123123 213123\n13  14  3 1123 123123 1234\n16  11  5 1 2 3 4 5\n15  13  4 2 3 4 5\n","data/atmsg_graph_003.txt")
     assert_file_equal("10 9\n14 3\n11 4\n13 6\n15 7\n16 5\n","data/atmsg_people_003.txt")
     
@@ -62,8 +64,16 @@ class TestAtMessages < Test::Unit::TestCase
     assert_file_equal(" 1 1 1 1\n","data/atmsg_graph_003_004_unr_scc.txt")
     assert_file_equal(" 1 1\n","data/atmsg_graph_003_005_unr_scc.txt")
     
+    # Check node counts for Rec, Unr Graphs
+    assert_file_equal("3 3\n4 2\n5 0\n","data/atmsg_graph_003_003-005_rec_ncount.txt")
+    assert_file_equal("3 5\n4 4\n5 2\n","data/atmsg_graph_003_003-005_unr_ncount.txt")
+    
+    # Check Degrees, Edges
+    assert_file_equal("10 2\n11 2\n13 3\n14 2\n15 2\n16 1\n","data/atmsg_people_003_degree.txt")
+    assert_file_equal("10 11\n10 13\n14 15\n13 14\n13 15\n11 16\n","data/atmsg_people_003_edges.txt")
+    
     # Check agreement
-    assert_file_equal("3 0.0000 0.5000 0 2 2 2\n4 0.0000 0.0000 0 1 0 2\n5 0.0000 0.0000 0 0 0 1\n","data/atmsg_graph_003_agreement_p80.txt")
-    assert_file_equal("3 0.0000 0.7500 0 2 3 1\n4 0.0000 0.5000 0 1 1 1\n5 0.0000 1.0000 0 0 1 0\n","data/atmsg_graph_003_agreement_p85.txt")
+    assert_file_equal("3 0.5000 0.7500 1 1 3 1\n4 1.0000 1.0000 1 0 2 0\n5 0.0000 1.0000 0 0 1 0\n","data/atmsg_graph_003_agreement_p80.txt")
+    assert_file_equal("3 0.5000 0.7500 1 1 3 1\n4 1.0000 1.0000 1 0 2 0\n5 0.0000 1.0000 0 0 1 0\n","data/atmsg_graph_003_agreement_p85.txt")
   end  
 end

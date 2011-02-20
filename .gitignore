@@ -2,3 +2,4 @@
 *.png
 *.zip
 *~
+.yardoc/*
