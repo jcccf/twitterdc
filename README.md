@@ -21,12 +21,17 @@ A set of Twitter-specific classes to specifically analyze Twitter data.
 1. Run Atm1 to find the people who sent more than N messages to each other, and build the filtered graphs
 2. Run Atm2 to see if more than k messages were sent both ways (reciprocated) or more than k messages sent one way but no messages the other way (unreciprocated)
 3. Run Atm3 to build strongest connected component sizes for the unreciprocated graphs
-4. Run Atm4 to test agreement between the degree prediction and the actual graphs built
 
 ### Building the SCC Charts
 
 1. Run Plot1 for the various stages
+  i.  Stage 1 calculates the # of unique nodes and depends on Atm2
+  ii. Stage 2 plots the SCC proportions and depends on Atm3
 
 ### Prediction Graphs
 
-1. Run PRED1 for the various stages
+1. Run Pred1 for the various stages in order
+  i.  Stage 1 calculates the degree count and builds the edge graph and depends on Atm1
+  ii. Stage 2 does prediction based on the generated reciprocated graphs and depends on Atm2
+  iii.Stage 3 generates predicted rec/unrec graphs
+  iv. Stage 4 builds the SCC for the predicted unrec graph

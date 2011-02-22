@@ -39,6 +39,10 @@ module TwitterDc
       @base+"/atmsg_graph_"+sprintf("%03d",@n)+"_unr_pred_deg_"+sprintf("%03d",eye)+".txt"
     end
     
+    def scc_of_unreciprocated_pred_deg(eye)
+      @base+"/atmsg_graph_"+sprintf("%03d",@n)+"_unr_pred_deg_"+sprintf("%03d",eye)+"_scc.txt"
+    end
+    
     def reciprocated_pred_deg(eye)
       @base+"/atmsg_graph_"+sprintf("%03d",@n)+"_rec_pred_deg_"+sprintf("%03d",eye)+".txt"
     end

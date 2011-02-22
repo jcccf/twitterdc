@@ -90,40 +90,42 @@ class AtMessages
     raise RuntimeError, "Call filter_graph_by_users before find_degrees" unless File.exist? @graph_filename
     
     # Open graph file and read in undirected edges
-    puts "Reading in edges from graph..."
+    puts "Reading in edges from graph & calculating indegree..."
     edges = {}
+    degrees = {}
     File.open(@graph_filename,"r").each do |l|
       parts = l.split(' ',3)
       id1,id2 = parts[0].to_i, parts[1].to_i
+      degrees[id2] ||= 0
+      degrees[id2] += 1
       id1,id2 = id2,id1 if id2 < id1
       edges[id1] ||= Set.new
       edges[id1].add id2
     end
     
-    # Count degrees
-    puts "Counting degrees of each node and writing undirected edges..."
-    degrees = {}
-    File.open(@people_edge_filename+"~", "w") do |f|
-      edges.each do |k,v|
-        v.each do |k2|
-          f.puts "#{k} #{k2}"
-          degrees[k] ||= 0
-          degrees[k2] ||= 0
-          degrees[k] += 1
-          degrees[k2] += 1
-        end
-      end
-    end
-    File.rename(@people_edge_filename+"~", @people_edge_filename)
-  
-    # Loop through edges and count and write to file
-    puts "Writing to file..."
+    # Write in-degree count to file
+    puts "Writing in-degree to file..."
     File.open(@people_deg_filename+"~", "w") do |f|
       degrees.each do |k,v|
         f.puts "#{k} #{v}"
       end
     end
     File.rename(@people_deg_filename+"~", @people_deg_filename)
+    
+    # Count in-degrees & loop through edges and count and write to file
+    puts "Writing undirected edges to file..."
+    File.open(@people_edge_filename+"~", "w") do |f|
+      edges.each do |k,v|
+        v.each do |k2|
+          f.puts "#{k} #{k2}"
+          # degrees[k] ||= 0
+          # degrees[k2] ||= 0
+          # degrees[k] += 1
+          # degrees[k2] += 1
+        end
+      end
+    end
+    File.rename(@people_edge_filename+"~", @people_edge_filename)
     
   end
   
@@ -132,15 +134,34 @@ class AtMessages
     raise RuntimeError, "Call filter_graph_by_users before build_graph" unless File.exist? @graph_filename
     
     c = 0
+    curr_sender = -1
+    curr_hash = {}
+    
     File.open(@graph_filename,"r").each do |l|
       parts = l.split(' ',4)
       sender, receiver, count = parts[0].to_i, parts[1].to_i, parts[2].to_i
-      people[sender] ||= {}
-      people[sender][receiver] ||= 0
-      people[sender][receiver] += count
+      
+      if curr_sender != sender
+        @people[curr_sender] = curr_hash # Can do ||= {} then .merge! instead
+        curr_hash = {}
+        curr_sender = sender
+      end
+      curr_hash[receiver] = count
+      
+      # people[sender] ||= {}
+      # people[sender][receiver] ||= 0
+      # people[sender][receiver] += count
+      
       print "." if c % 1000 == 0
       c += 1
     end
+    
+    @people[curr_sender] ||= {}
+    @people[curr_sender].merge! curr_hash
+    
+    @people.delete -1
+    
+    #puts @people.inspect
     
     @k.upto(@k2) do |i|
       puts "Now building for #{i}"
@@ -188,12 +209,47 @@ class AtMessages
     end
   end
   
+  # Find the strongly connected components in the predicted unreciprocated subgraphs based 
+  # on degrees of original graph
+  def find_scc_on_degree(min,max,step)
+    
+    # Check that the required files for computation exist
+    (min..max).step(step) do |i|
+      raise RuntimeError, "Run build_prediction_on_degree before find_scc_on_degree" unless File.exist? @c.unreciprocated_pred_deg(i)
+    end
+    
+    (min..max).step(step) do |i|
+      scc_filename = @c.scc_of_unreciprocated_pred_deg(i)
+      unr_filename = @c.unreciprocated_pred_deg(i)
+      
+      puts "Now reading in graph for #{i}"
+      a = AdjGraph.new
+      File.open(unr_filename,"r") do |f|
+        while ln = f.gets
+          parts = ln.split
+          a.add_directed_edge(parts[0].to_i,parts[1].to_i)
+        end
+      end
+    
+      puts "Now calculating predicted by degree SCC for #{i}"
+      File.open(scc_filename+"~","w") do |f|
+        f.puts a.tarjan_string_limit(1000)
+      end
+      File.rename(scc_filename+"~", scc_filename)
+    end
+  end
+  
+  
+  
   # Build the reciprocated and unreciprocated subgraphs based on the degrees of the original
   # graph, and looking at the ratio e
   # Note! The reciprocated subgraph DOES NOT repeat edges!
   def build_prediction_on_degree(min,max,step)
+    
+    puts "Reading in degrees..."
+    
     degrees = Processor.to_hash_float(@people_deg_filename)
-    puts degrees.inspect
+    #puts degrees.inspect
     (min..max).step(step) do |i|
       
       puts "Building for #{i}"
@@ -205,8 +261,8 @@ class AtMessages
         File.open(@c.unreciprocated_pred_deg(i)+"~","w") do |u|
           File.open(@people_edge_filename, "r").each do |l|
             id1,id2 = l.split.map{ |x| x.to_i }
-            ratio = degrees[id1]/degrees[id2]
-            puts ratio
+            ratio = (degrees[id1] && degrees[id2]) ? degrees[id1]/degrees[id2] : 0
+            # puts ratio
             if e <= ratio && ratio <= e_inv
               r.puts l
             else
@@ -255,18 +311,23 @@ class AtMessages
           
           File.open(rec_filename,"r").each do |l|
             id1,id2 = l.split.map{ |x| x.to_i }
-            ratio = degrees[id1]/degrees[id2]
+            ratio = (degrees[id1] && degrees[id2]) ? degrees[id1]/degrees[id2] : 0
             if e <= ratio && ratio <= e_inv
               match += 1
             else
               unmatch += 1
             end
           end
+          
+          puts File.read(unr_filename)
 
           File.open(unr_filename,"r").each do |l|
             id1,id2 = l.split.map{ |x| x.to_i }
-            ratio = degrees[id1]/degrees[id2]
+            puts "testing #{id1} #{id2}"
+            ratio = (degrees[id1] && degrees[id2]) ? degrees[id1]/degrees[id2] : 0
+            puts ratio
             if ratio < e || e_inv < ratio
+              puts "match #{id1}, #{id2}"
               match2 += 1
             else
               unmatch2 += 1
