@@ -67,8 +67,8 @@ class TestAtMessages < Test::Unit::TestCase
     assert_file_equal(" 1 1\n","data/atmsg_graph_003_005_unr_scc.txt")
     
     # Check node counts for Rec, Unr Graphs
-    assert_file_equal("3 3\n4 2\n5 0\n","data/atmsg_graph_003_003-005_rec_ncount.txt")
-    assert_file_equal("3 5\n4 4\n5 2\n","data/atmsg_graph_003_003-005_unr_ncount.txt")
+    assert_file_equal("3 3\n4 2\n5 0\n","data/atmsg_graph_003_rec_003-005_ncount.txt")
+    assert_file_equal("3 5\n4 4\n5 2\n","data/atmsg_graph_003_unr_003-005_ncount.txt")
     
     # Check Degrees, Edges
     assert_file_equal("11 2\n13 2\n15 1\n10 2\n14 1\n","data/atmsg_people_003_degree.txt")

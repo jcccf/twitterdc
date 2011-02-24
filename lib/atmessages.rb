@@ -323,11 +323,11 @@ class AtMessages
 
           File.open(unr_filename,"r").each do |l|
             id1,id2 = l.split.map{ |x| x.to_i }
-            puts "testing #{id1} #{id2}"
+            #puts "testing #{id1} #{id2}"
             ratio = (degrees[id1] && degrees[id2]) ? degrees[id1]/degrees[id2] : 0
             puts ratio
             if ratio < e || e_inv < ratio
-              puts "match #{id1}, #{id2}"
+              #puts "match #{id1}, #{id2}"
               match2 += 1
             else
               unmatch2 += 1
@@ -356,6 +356,32 @@ class AtMessages
       yp << File.read(f).split(" ",2)[0].to_f / ybase[i].to_f
     end
     Plotter.plot("SCC for Unreciprocated","Threshold","Size of Largest SCC",xp,yp,@c.scc_of_unreciprocated_image)
+  end
+  
+  def plot_agreement_graphs(min,max,step)
+    Dir.mkdir @c.images_dir unless File.directory? @c.images_dir
+    
+    xpN, ypN, ypN2, titles = [], [], [], []
+    
+    (min..max).step(step) do |i|
+      agree_file = @c.agreement(i)
+      xp, yp, yp2 = [], [], []
+      File.open(agree_file,"r").each do |l|
+        parts = l.split(" ")
+        xp << parts[0].to_f
+        yp << parts[1].to_f
+        yp2 << parts[2].to_f
+      end
+      
+      xpN << xp
+      ypN << yp
+      ypN2 << yp2
+      titles << i
+    end
+    
+    Plotter.plotN("Agreement for Reciprocated for n=#{@c.n}","Threshold","Proportion in Agreement",titles,xpN,ypN,@c.reciprocated_agreement_image)
+    Plotter.plotN("Agreement for Unreciprocated for n=#{@c.n}","Threshold","Proportion in Agreement",titles,xpN,ypN2,@c.unreciprocated_agreement_image)
+    
   end
   
   private
@@ -395,18 +421,18 @@ class AtMessages
               if v2 >= i
                 if @people.include? k2
                   if @people[k2].include? k
-                    s.puts "#{k} #{k2}" if @people[k2][k] >= i
-                    @people_cache[k] ||= {}
-                    @people_cache[k][k2] = [v2, @people[k2][k]]
-                  else
+                    if @people[k2][k] >= i
+                      s.puts "#{k} #{k2}" 
+                      @people_cache[k] ||= {}
+                      @people_cache[k][k2] = [v2, @people[k2][k]]
+                    end
+                  else # k2 doesn't point to k, so 0 messages sent
                     t.puts "#{k} #{k2}"
                     @people_cache[k] ||= {}
                     @people_cache[k][k2] = [v2, 0]
                   end
                 else
-                  t.puts "#{k} #{k2}"
-                  @people_cache[k] ||= {}
-                  @people_cache[k][k2] = [v2, 0]
+                  raise RuntimeError "@people must include #{k2}"
                 end
               end
             end

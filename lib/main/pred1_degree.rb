@@ -17,15 +17,18 @@ case stage
 when 1
   puts "Building degrees and edges for #{n}"
   am.find_degrees_edges
-when 2
+when 2 # DO NOT USE
   puts "Testing Agreement for #{n}, #{k} to #{k2} for e=#{e1} to #{e2} in steps of #{st}..."
   am.degree_agreement_with_generated_graphs(e1,e2,st)
-when 3
+when 3 # DO NOT USE
   puts "Buliding predicted reciprocated and unreciprocated subgraphs for #{n}"
   am.build_prediction_on_degree(e1,e2,st)
-when 4
+when 4 # DO NOT USE
   puts "Building SCC for predicted unreciprocated subgraphs for #{n}"
   am.find_scc_on_degree(e1,e2,st)
+when 5 # DO NOT USE
+  puts "Plotting Agreement Graphs"
+  am.plot_agreement_graphs(e1,e2,st)
 else
   puts "Error in Stage Selection!"
 end

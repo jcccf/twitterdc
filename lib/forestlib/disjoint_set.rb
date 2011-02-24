@@ -9,8 +9,8 @@ module ForestLib
   
     # Add an item to the set
     def add(id)
-      @h[id] = id
-      @r[id] = 0
+      @h[id] ||= id
+      @r[id] ||= 0
     end
   
     # Union the set containing id1 and that containing id2
