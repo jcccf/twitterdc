@@ -1,6 +1,6 @@
 module TwitterDc
   class Constants
-    attr_reader :base, :n, :k, :k2
+    attr_reader :base, :n, :k, :k2, :e1, :e2, :st
     
     def initialize(base_dir, n, k, k2, e1=60, e2=95, st=5)
       @base = base_dir
@@ -12,8 +12,19 @@ module TwitterDc
       @st = st
     end
 
+    # List of people and also the number of messages each person sent (in total in the full graph)
     def people
       @base+"/atmsg_people_"+sprintf("%03d",@n)+".txt"
+    end
+    
+    # The subgraph that everything else is based on
+    def graph
+      @base+"/atmsg_graph_"+sprintf("%03d",@n)+".txt"
+    end
+    
+    # Number of messages each person sent/received in the subgraph
+    def people_msg
+      @base+"/atmsg_people_"+sprintf("%03d",@n)+"_msg.txt"
     end
 
     # Reciprocated Graph File (with Reptition)
@@ -75,6 +86,40 @@ module TwitterDc
         end
       else
         @base+"/images/atmsg_graph_"+sprintf("%03d",@n)+"_"+sprintf("%03d",eye)+"_rur_outdegrees.png"
+      end
+    end
+    
+    # Number of edges that each person participates in that are reciprocated or unreciprocated
+    def rur_outdegrees_image_alt(eye=@k)
+      if block_given?
+        @k.upto(@k2) do |i|
+          filename = @base+"/images/atmsg_graph_"+sprintf("%03d",@n)+"_"+sprintf("%03d",i)+"_rur2_outdegrees.png"
+          yield i, filename
+        end
+      else
+        @base+"/images/atmsg_graph_"+sprintf("%03d",@n)+"_"+sprintf("%03d",eye)+"_rur2_outdegrees.png"
+      end
+    end
+    
+    def rur_pred_degree(eye=@k)
+      if block_given?
+        @k.upto(@k2) do |i|
+          filename = @base+"/atmsg_graph_"+sprintf("%03d",@n)+"_"+sprintf("%03d",i)+"_rur_pred.txt"
+          yield i, filename
+        end
+      else
+        @base+"/atmsg_graph_"+sprintf("%03d",@n)+"_"+sprintf("%03d",eye)+"_rur_pred.txt"
+      end
+    end
+    
+    def rur_pred_degree_image(eye=@k)
+      if block_given?
+        @k.upto(@k2) do |i|
+          filename = @base+"/images/atmsg_graph_"+sprintf("%03d",@n)+"_"+sprintf("%03d",i)+"_rur_pred.png"
+          yield i, filename
+        end
+      else
+        @base+"/images/atmsg_graph_"+sprintf("%03d",@n)+"_"+sprintf("%03d",eye)+"_rur_pred.png"
       end
     end
     
@@ -141,6 +186,10 @@ module TwitterDc
     
     def agreement(eye)
       @base+"/atmsg_graph_"+sprintf("%03d",@n)+"_agreement_p#{eye}.txt"
+    end
+    
+    def degrees
+      @base+"/atmsg_people_"+sprintf("%03d",@n)+"_degree.txt"
     end
     
   end

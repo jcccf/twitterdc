@@ -98,19 +98,116 @@ class AtMessages2
   # Plot the reciprocated/unreciprocated outdegrees for each person as a scatter plot
   def build_rur_outdegrees_plot
     @c.rur_outdegrees do |i,out_filename|
-      xp, yp = [], []
+      cnt = {}
+      cntalt = {}
       File.open(out_filename,"r").each do |l|
-        p = l.split.map!{|v| v.to_f}
-        xp << p[1]
-        yp << p[2]
+        p = l.split.map!{|v| v.to_i}
+        cnt[p[1]] ||= Hash.new(0)
+        cnt[p[1]][p[2]] += 1
+        cntalt[p[1]] ||= Hash.new(0)
+        cntalt[p[1]][p[3]] += 1
       end
-      Plotter.plot("Reciprocated and Unreciprocated Counts Scatter Plot for k=#{i}","Reciprocated Count","Unreciprocated Count",xp,yp,@c.rur_outdegrees_image(i),"dots")
+      # puts cnt.inspect
+      Plotter.plotHeatMap("Reciprocated and Unreciprocated Counts Scatter Plot for k=#{i}","Reciprocated Count","Unreciprocated Count",HeatMapData.new(cnt),@c.rur_outdegrees_image(i))
+      Plotter.plotHeatMap("Reciprocated and Unreciprocated Counts Alternative Scatter Plot for k=#{i}","Reciprocated Count","Unreciprocated Count",HeatMapData.new(cntalt),@c.rur_outdegrees_image_alt(i))
     end
   end
   
-  # Predict reciprocity 
+  # Predict reciprocity
+  # Output in the form "a b c d e f" lines
+  # a is the threshold value, b is the number of predictions of reciprocated edges
+  # c is the number of correct predictions of reciprocated edges, e & f are the same
+  # for unreciprocated edges, f is the total number of edges
   def build_rur_prediction
+    @c.unreciprocated do |i,unr_filename|
+      
+      dupchecker = Set.new
+      
+      # Read in Unreciprocated Edges
+      puts "Reading in Unreciprocated Edges"
+      edges = []
+      rec_filename = @c.reciprocated_norep(i)
+      File.open(unr_filename,"r").each do |l|
+        e1, e2 = l.split.map!{|v| v.to_i }
+        e1, e2 = e2, e1 if e1 > e2
+        raise RuntimeError "Not supposed to exist" if dupchecker.include? [e1,e2]
+        dupchecker.add [e1, e2]
+        edges << [e1, e2, 1]
+      end
+      
+      # Read in Reciprocated Edges
+      puts "Reading in Reciprocated Edges"
+      tmp_edges = []
+      File.open(rec_filename,"r").each do |l|
+        e1, e2 = l.split.map!{|v| v.to_i }
+        e1, e2 = e2, e1 if e1 > e2
+        raise RuntimeError "Not supposed to exist" if dupchecker.include? [e1,e2]
+        dupchecker.add [e1, e2]
+        tmp_edges << [e1, e2, 2]     
+      end
+      
+      # Take N random entries from the reciprocated edge list 
+      # where N = # of unreciprocated edges
+      edges = edges | (tmp_edges.sort_by{rand}[0..(edges.count-1)])
+      
+      #puts edges.inspect
     
+      # Read in degree counts
+      degrees = Processor.to_hash_float(@c.degrees)
+    
+      puts "Calculating Predictions"
+      File.open(@c.rur_pred_degree(i)+"~","w") do |f|
+        # Step through each threshold
+        ((@c.e1)..(@c.e2)).step(@c.st) do |j|
+          e = j / 100.0
+          e_inv = 1 / e
+        
+          # puts "e is #{e}"
+        
+          rec_no = 0
+          rec_correct = 0
+          unr_no = 0
+          unr_correct = 0
+          edges.each do |e1, e2, type|
+            ratio = (degrees[e1] && degrees[e2]) ? degrees[e1]/degrees[e2] : 0
+            # For each edge, predict reciprocity, recino += 1
+            # If the edge was reciprocated, correct += 1
+            if e <= ratio && ratio <= e_inv
+              rec_no += 1
+              rec_correct += 1 if type == 2
+            else
+              unr_no += 1
+              unr_correct += 1 if type == 1
+            end            
+          end
+        
+          f.puts "#{j} #{rec_no} #{rec_correct} #{unr_no} #{unr_correct} #{edges.count}"
+        end
+      end
+      File.rename(@c.rur_pred_degree(i)+"~",@c.rur_pred_degree(i))
+    
+    end
+  end
+  
+  def build_rur_prediction_plot
+    @c.rur_pred_degree do |i,filename|
+      x, y1, y2, y3, y4, y5 = [], [], [], [], [], []
+      File.open(filename, "r").each do |l|
+        p = l.split.map!{|v| v.to_f}
+        x << p[0]/100.0
+        y1 << p[2]/p[1]
+        y2 << p[1]/p[5]
+        y3 << p[4]/p[3]
+        y4 << p[3]/p[5]
+        y5 << (p[2]+p[4])/p[5]
+      end
+      
+      #titles = ["Correctly Guessed Reciprocated/Guessed Reciprocated", "Guessed Reciprocated/Total", "Correctly Guessed Unreciprocated/Guessed Unreciprocated","Guessed Unreciprocated/Total", "Correct Guesses/Total"]
+      titles = ["(E_k^r & F_theta) / F_t", "F_t/Total", "(E_k^u & F_t`) / F_t`", "F_t` / Total", "(E_k^r & F_t + E_k^u & F_t`) / Total"]
+      xpN = [x, x, x, x, x]
+      ypN = [y1, y2, y3, y4, y5]
+      Plotter.plotN("Accuracy of Degree Prediction","Threshold (theta)","Accuracy",titles,xpN,ypN,@c.rur_pred_degree_image(i))
+    end
   end
   
   # Rebuild correct graphs for reciprocated subgraphs
@@ -166,6 +263,30 @@ class AtMessages2
       end
     end
     File.rename(@c.rur_edge_count+"~",@c.rur_edge_count)
+  end
+  
+  # Calculate the number of messages each person received in the subgraph
+  def build_message_count
+    
+    # Read in Counts
+    puts "Reading in Counts"
+    counts = {}
+    File.open(@c.graph, "r").each do |l|
+      parts = l.split(" ", 4)
+      id1, id2, cnt = parts[0].to_i, parts[1].to_i, parts[2].to_i
+      counts[id1] ||= [0, 0]
+      counts[id2] ||= [0, 0]
+      counts[id1][1] += cnt
+      counts[id2][0] += cnt
+    end
+    
+    puts "Printing Counts"
+    File.open(@c.people_msg+"~","w") do |f|
+      counts.each do |k,v|
+        f.puts "#{k} #{v[0]} #{v[1]}"
+      end
+    end
+    File.rename(@c.people_msg+"~",@c.people_msg)
   end
   
 end

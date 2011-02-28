@@ -2,6 +2,24 @@ require 'gnuplot'
 
 module ForestLib
   
+  # DataSet which takes in (x,y,z) triples, as a 2D hash with z corresponding to the intensity
+  # I.e. hash[x][y] = z
+  class HeatMapData
+    def initialize(hash)
+      @hash = hash
+    end
+    
+    def to_gsplot
+      f = ""
+      @hash.each do |x,v|
+        v.each do |y,z|
+          f += "#{x} #{y} #{z}\n"
+        end
+      end
+      f
+    end
+  end
+  
   # Abstraction to plot graphs using gnuplot
   class Plotter
     
@@ -42,9 +60,6 @@ module ForestLib
           plot.xlabel xlabel
           plot.ylabel ylabel
           #plot.set "multiplot layout 15,1 title=\"test title\""
-
-          #x = (0..50).collect { |v| v.to_f }
-          #y = x.collect { |v| v ** 2 }
           
           plot.data = []
 
@@ -53,6 +68,32 @@ module ForestLib
               ds.with = "lines" #linespoints
               ds.title = titles[i]
             end
+          end
+
+          plot.output output_file
+        end
+      end  
+    end
+    
+    # Plot a heat map, with z values corresponding to intensity
+    def self.plotHeatMap(title,xlabel,ylabel,heatmap,output_file,plot_type="points pt 7 palette")
+      Gnuplot.open do |gp|
+        Gnuplot::SPlot.new( gp ) do |plot|
+          plot.term 'pngcairo size 600,600'
+          
+          plot.yrange '[0:60]'
+          plot.xrange '[0:60]'
+
+          plot.set "size square"
+          plot.title title
+          plot.xlabel xlabel
+          plot.ylabel ylabel
+          plot.set "view map"
+          plot.set "palette defined (0 \"white\", 10 \"blue\", 100 \"green\", 1000 \"yellow\", 10000 \"orange\", 100000 \"red\")"
+
+          plot.data << Gnuplot::DataSet.new( heatmap ) do |ds|
+            ds.with = plot_type #lines,linespoints
+            ds.notitle
           end
 
           plot.output output_file
