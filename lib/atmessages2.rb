@@ -98,18 +98,21 @@ class AtMessages2
   # Plot the reciprocated/unreciprocated outdegrees for each person as a scatter plot
   def build_rur_outdegrees_plot
     @c.rur_outdegrees do |i,out_filename|
-      cnt = {}
-      cntalt = {}
+      cnt, cntalt, cntratio = {}, {}, {}
       File.open(out_filename,"r").each do |l|
-        p = l.split.map!{|v| v.to_i}
+        p = l.split.map!{|v| v.to_f}
         cnt[p[1]] ||= Hash.new(0)
         cnt[p[1]][p[2]] += 1
         cntalt[p[1]] ||= Hash.new(0)
         cntalt[p[1]][p[3]] += 1
+        rec_ratio = (p[1]/(p[1]+p[2])).round(4)
+        cntratio[rec_ratio] ||= Hash.new(0)
+        cntratio[rec_ratio][1-rec_ratio] += 1
       end
       # puts cnt.inspect
       Plotter.plotHeatMap("Reciprocated and Unreciprocated Counts Scatter Plot for k=#{i}","Reciprocated Count","Unreciprocated Count",HeatMapData.new(cnt),@c.rur_outdegrees_image(i))
       Plotter.plotHeatMap("Reciprocated and Unreciprocated Counts Alternative Scatter Plot for k=#{i}","Reciprocated Count","Unreciprocated Count",HeatMapData.new(cntalt),@c.rur_outdegrees_image_alt(i))
+      Plotter.plotHeatMap("Reciprocated and Unreciprocated Proportion Scatter Plot for k=#{i}","Reciprocated Count Proportion","Unreciprocated Count Proportion",HeatMapData.new(cntratio),@c.rur_outdegrees_image_ratio(i), '[0:1]', '[0:1]')
     end
   end
   
@@ -118,7 +121,7 @@ class AtMessages2
   # a is the threshold value, b is the number of predictions of reciprocated edges
   # c is the number of correct predictions of reciprocated edges, e & f are the same
   # for unreciprocated edges, f is the total number of edges
-  def build_rur_prediction
+  def build_rur_prediction(parameter=:degree)
     @c.unreciprocated do |i,unr_filename|
       
       dupchecker = Set.new
@@ -153,10 +156,27 @@ class AtMessages2
       #puts edges.inspect
     
       # Read in degree counts
-      degrees = Processor.to_hash_float(@c.degrees)
-    
+      degrees = case parameter
+        when :degree then Processor.to_hash_float(@c.degrees)
+        when :inmsg then Processor.to_hash_float(@c.people_msg, 0, 1)
+        when :outmsg then Processor.to_hash_float(@c.people_msg, 0, 2)
+        when :msgdeg then
+          msgs = Processor.to_hash_float(@c.people_msg, 0, 1)
+          degs = Processor.to_hash_float(@c.degrees)
+          degs.merge(msgs){ |k,deg,msg| msg/deg }
+        else raise ArgumentException "Unknown Parameter"
+        end
+        
+      outfile = case parameter
+        when :degree then @c.rur_pred_degree(i)
+        when :inmsg then @c.rur_pred_inmsg(i)
+        when :outmsg then @c.rur_pred_outmsg(i)
+        when :msgdeg then @c.rur_pred_msgdeg(i)
+        else raise ArgumentException "Unknown Parameter"
+        end
+        
       puts "Calculating Predictions"
-      File.open(@c.rur_pred_degree(i)+"~","w") do |f|
+      File.open(outfile+"~","w") do |f|
         # Step through each threshold
         ((@c.e1)..(@c.e2)).step(@c.st) do |j|
           e = j / 100.0
@@ -184,13 +204,13 @@ class AtMessages2
           f.puts "#{j} #{rec_no} #{rec_correct} #{unr_no} #{unr_correct} #{edges.count}"
         end
       end
-      File.rename(@c.rur_pred_degree(i)+"~",@c.rur_pred_degree(i))
+      File.rename(outfile+"~",outfile)
     
     end
   end
   
-  def build_rur_prediction_plot
-    @c.rur_pred_degree do |i,filename|
+  def build_rur_prediction_plot(parameter=:degree)
+    things_to_do = Proc.new do |i,filename|
       x, y1, y2, y3, y4, y5 = [], [], [], [], [], []
       File.open(filename, "r").each do |l|
         p = l.split.map!{|v| v.to_f}
@@ -206,8 +226,25 @@ class AtMessages2
       titles = ["(E_k^r & F_theta) / F_t", "F_t/Total", "(E_k^u & F_t`) / F_t`", "F_t` / Total", "(E_k^r & F_t + E_k^u & F_t`) / Total"]
       xpN = [x, x, x, x, x]
       ypN = [y1, y2, y3, y4, y5]
-      Plotter.plotN("Accuracy of Degree Prediction","Threshold (theta)","Accuracy",titles,xpN,ypN,@c.rur_pred_degree_image(i))
+      
+      imagefile = case parameter
+        when :degree then @c.rur_pred_degree_image(i)
+        when :inmsg then @c.rur_pred_inmsg_image(i)
+        when :outmsg then @c.rur_pred_outmsg_image(i)
+        when :msgdeg then @c.rur_pred_msgdeg_image(i)
+        else raise ArgumentException "Unknown Parameter"
+        end
+      
+      Plotter.plotN("Accuracy of Degree Prediction","Threshold (theta)","Accuracy",titles,xpN,ypN,imagefile)
     end
+    
+    files = case parameter
+      when :degree then @c.rur_pred_degree &things_to_do
+      when :inmsg then @c.rur_pred_inmsg &things_to_do
+      when :outmsg then @c.rur_pred_outmsg &things_to_do
+      when :msgdeg then @c.rur_pred_msgdeg &things_to_do
+      else raise ArgumentException "Unknown Parameter"
+      end
   end
   
   # Rebuild correct graphs for reciprocated subgraphs

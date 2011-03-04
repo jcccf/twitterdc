@@ -11,7 +11,21 @@ module TwitterDc
       @e2 = e2
       @st = st
     end
-
+    
+    # Base template for files that depend only on n and k
+    def base_n_k(suffix, eye=@k, is_image=false)
+      folder = is_image ? @base+"/images" : @base
+      extension = is_image ? "png" : "txt"
+      if block_given?
+        @k.upto(@k2) do |i|
+          filename = sprintf("%s/atmsg_graph_%03d_%03d_%s.%s", folder, @n, i, suffix, extension)
+          yield i, filename
+        end
+      else
+        sprintf("%s/atmsg_graph_%03d_%03d_%s.%s", folder, @n, eye, suffix, extension)
+      end
+    end
+    
     # List of people and also the number of messages each person sent (in total in the full graph)
     def people
       @base+"/atmsg_people_"+sprintf("%03d",@n)+".txt"
@@ -28,27 +42,13 @@ module TwitterDc
     end
 
     # Reciprocated Graph File (with Reptition)
-    def reciprocated(eye=@k)
-      if block_given?
-        @k.upto(@k2) do |i|
-          filename = @base+"/atmsg_graph_"+sprintf("%03d",@n)+"_"+sprintf("%03d",i)+"_rec.txt"
-          yield i, filename
-        end
-      else
-        @base+"/atmsg_graph_"+sprintf("%03d",@n)+"_"+sprintf("%03d",eye)+"_rec.txt"
-      end
+    def reciprocated(eye=@k, &block)
+      base_n_k("rec",eye, &block)
     end
     
     # Reciprocated Graph File (No Repetitions)
-    def reciprocated_norep(eye=@k)
-      if block_given?
-        @k.upto(@k2) do |i|
-          filename = @base+"/atmsg_graph_"+sprintf("%03d",@n)+"_"+sprintf("%03d",i)+"_recn.txt"
-          yield i, filename
-        end
-      else
-        @base+"/atmsg_graph_"+sprintf("%03d",@n)+"_"+sprintf("%03d",eye)+"_recn.txt"
-      end
+    def reciprocated_norep(eye=@k, &block)
+      base_n_k("recn",eye, &block)
     end
     
     # Reciprocated Node Count File
@@ -66,72 +66,65 @@ module TwitterDc
     end
     
     # Number of edges that each person participates in that are reciprocated or unreciprocated
-    def rur_outdegrees(eye=@k)
-      if block_given?
-        @k.upto(@k2) do |i|
-          filename = @base+"/atmsg_graph_"+sprintf("%03d",@n)+"_"+sprintf("%03d",i)+"_rur_outdegrees.txt"
-          yield i, filename
-        end
-      else
-        @base+"/atmsg_graph_"+sprintf("%03d",@n)+"_"+sprintf("%03d",eye)+"_rur_outdegrees.txt"
-      end
+    def rur_outdegrees(eye=@k, &block)
+      base_n_k("rur_outdegrees",eye, &block)
     end
     
     # Number of edges that each person participates in that are reciprocated or unreciprocated
-    def rur_outdegrees_image(eye=@k)
-      if block_given?
-        @k.upto(@k2) do |i|
-          filename = @base+"/images/atmsg_graph_"+sprintf("%03d",@n)+"_"+sprintf("%03d",i)+"_rur_outdegrees.png"
-          yield i, filename
-        end
-      else
-        @base+"/images/atmsg_graph_"+sprintf("%03d",@n)+"_"+sprintf("%03d",eye)+"_rur_outdegrees.png"
-      end
+    def rur_outdegrees_image(eye=@k, &block)
+      base_n_k("rur_outdegrees",eye, true, &block)
     end
     
     # Number of edges that each person participates in that are reciprocated or unreciprocated
-    def rur_outdegrees_image_alt(eye=@k)
-      if block_given?
-        @k.upto(@k2) do |i|
-          filename = @base+"/images/atmsg_graph_"+sprintf("%03d",@n)+"_"+sprintf("%03d",i)+"_rur2_outdegrees.png"
-          yield i, filename
-        end
-      else
-        @base+"/images/atmsg_graph_"+sprintf("%03d",@n)+"_"+sprintf("%03d",eye)+"_rur2_outdegrees.png"
-      end
+    def rur_outdegrees_image_alt(eye=@k, &block)
+      base_n_k("rur2_outdegrees",eye, true, &block)
     end
     
-    def rur_pred_degree(eye=@k)
-      if block_given?
-        @k.upto(@k2) do |i|
-          filename = @base+"/atmsg_graph_"+sprintf("%03d",@n)+"_"+sprintf("%03d",i)+"_rur_pred.txt"
-          yield i, filename
-        end
-      else
-        @base+"/atmsg_graph_"+sprintf("%03d",@n)+"_"+sprintf("%03d",eye)+"_rur_pred.txt"
-      end
+    # Proportion of edges that each person participates in that are reciprocated or unreciprocated
+    def rur_outdegrees_image_ratio(eye=@k, &block)
+      base_n_k("rur_outdegrees_ratio",eye, true, &block)
     end
     
-    def rur_pred_degree_image(eye=@k)
-      if block_given?
-        @k.upto(@k2) do |i|
-          filename = @base+"/images/atmsg_graph_"+sprintf("%03d",@n)+"_"+sprintf("%03d",i)+"_rur_pred.png"
-          yield i, filename
-        end
-      else
-        @base+"/images/atmsg_graph_"+sprintf("%03d",@n)+"_"+sprintf("%03d",eye)+"_rur_pred.png"
-      end
+    # Prediction based on degree
+    def rur_pred_degree(eye=@k, &block)
+      base_n_k("rur_pred",eye, &block)
     end
     
-    def unreciprocated(eye=@k)
-      if block_given?
-        @k.upto(@k2) do |i|
-          filename = @base+"/atmsg_graph_"+sprintf("%03d",@n)+"_"+sprintf("%03d",i)+"_unr.txt"
-          yield i, filename
-        end
-      else
-        @base+"/atmsg_graph_"+sprintf("%03d",@n)+"_"+sprintf("%03d",eye)+"_unr.txt"
-      end
+    def rur_pred_degree_image(eye=@k, &block)
+      base_n_k("rur_pred",eye, true, &block)
+    end
+    
+    # Prediction based on in-messages
+    def rur_pred_inmsg(eye=@k, &block)
+      base_n_k("rur_pred_inmsg",eye, &block)
+    end
+    
+    def rur_pred_inmsg_image(eye=@k, &block)
+      base_n_k("rur_pred_inmsg",eye, true, &block)
+    end
+    
+    # Prediction based on out-messages
+    def rur_pred_outmsg(eye=@k, &block)
+      base_n_k("rur_pred_outmsg",eye, &block)
+    end
+    
+    def rur_pred_outmsg_image(eye=@k, &block)
+      base_n_k("rur_pred_outmsg",eye, true, &block)
+    end
+    
+    # Prediction based on in-messages / in-degree
+    def rur_pred_msgdeg(eye=@k, &block)
+      base_n_k("rur_pred_msgdeg",eye, &block)
+    end
+    
+    # Image of prediction based on in-messages / in-degree
+    def rur_pred_msgdeg_image(eye=@k, &block)
+      base_n_k("rur_pred_msgdeg",eye, true, &block)
+    end
+    
+    # Unreciprocated Graph File
+    def unreciprocated(eye=@k, &block)
+      base_n_k("unr",eye, &block)
     end
     
     def unreciprocated_pred_deg(eye)
@@ -146,30 +139,14 @@ module TwitterDc
       @base+"/atmsg_graph_"+sprintf("%03d",@n)+"_rec_pred_deg_"+sprintf("%03d",eye)+".txt"
     end
     
-    def scc_of_unreciprocated(eye=@k)
-      if block_given?
-        @k.upto(@k2) do |i|
-          filename = @base+"/atmsg_graph_"+sprintf("%03d",@n)+"_"+sprintf("%03d",i)+"_unr_scc.txt"
-          yield i, filename
-        end
-      else
-        @base+"/atmsg_graph_"+sprintf("%03d",@n)+"_"+sprintf("%03d",eye)+"_unr_scc.txt"
-      end
+    # Proportion in Strongly Connected Component in Unreciprocated Graph
+    def scc_of_unreciprocated(eye=@k, &block)
+      base_n_k("unr_scc",eye, &block)
     end
     
-    def cc_of_unreciprocated(eye=@k)
-      if block_given?
-        @k.upto(@k2) do |i|
-          filename = @base+"/atmsg_graph_"+sprintf("%03d",@n)+"_"+sprintf("%03d",i)+"_unr_cc.txt"
-          yield i, filename
-        end
-      else
-        @base+"/atmsg_graph_"+sprintf("%03d",@n)+"_"+sprintf("%03d",eye)+"_unr_cc.txt"
-      end
-    end
-    
-    def images_dir
-      @base+"/images"
+    # Proportion in Connected Component in Unreciprocated Graph
+    def cc_of_unreciprocated(eye=@k, &block)
+      base_n_k("unr_cc",eye, &block)
     end
     
     def scc_of_unreciprocated_image

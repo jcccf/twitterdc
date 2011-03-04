@@ -4,23 +4,25 @@ module ForestLib
   class Processor
     
     # Converts "a b" on each line of a file into "a => b" mappings
-    def self.to_hash(input_file)
+    def self.to_hash(input_file, index_1 = 0, index_2 = 1)
       self.validate(input_file)
+      maxsplit = [index_1, index_2].max + 1
       h = {}
       File.open(input_file,"r").each do |l|
-        parts = l.split(" ", 3)
-        h[parts[0].to_i] = parts[1].to_i
+        parts = l.split(" ", maxsplit)
+        h[parts[index_1].to_i] = parts[index_2].to_i
       end
       h
     end
     
     # Converts "a b" on each line of a file into "a => b" mappings, but cast b as a float
-    def self.to_hash_float(input_file)
+    def self.to_hash_float(input_file, index_1 = 0, index_2 = 1)
       self.validate(input_file)
+      maxsplit = [index_1, index_2].max + 1
       h = {}
       File.open(input_file,"r").each do |l|
-        parts = l.split(" ", 3)
-        h[parts[0].to_i] = parts[1].to_f
+        parts = l.split(" ", maxsplit)
+        h[parts[index_1].to_i] = parts[index_2].to_f
       end
       h
     end

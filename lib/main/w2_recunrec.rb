@@ -42,6 +42,27 @@ when 20 # Depends on Stage 1
 when 30
   puts "Build Message Counts (not that of the whole complete graph)"
   am.build_message_count
+when 31
+  puts "Predicting Edges in the Graph using In Messages"
+  am.build_rur_prediction(:inmsg)
+when 32
+  puts "Building the Edge Prediction Plots using In Messages"
+  am.build_rur_prediction_plot(:inmsg)
+when 33
+  puts "Predicting Edges in the Graph using Out Messages"
+  am.build_rur_prediction(:outmsg)
+when 34
+  puts "Building the Edge Prediction Plots using Out Messages"
+  am.build_rur_prediction_plot(:outmsg)
+when 35
+  puts "Predicting Edges in the Graph using In Messages/In Degree"
+  am.build_rur_prediction(:msgdeg)
+when 36
+  puts "Building the Edge Prediction Plots using In Messages/In Degree"
+  am.build_rur_prediction_plot(:msgdeg)
+when 40
+  puts "Building In/Out-degree Counts"
+  am.build_degree_counts
 else
   puts "Error in Stage Selection!"
 end

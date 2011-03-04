@@ -26,7 +26,7 @@ class TestAtMessages2 < Test::Unit::TestCase
     assert_file_equal("15 13\n16 11\n","data/atmsg_graph_003_003_unr.txt")
     assert_file_equal("10 11\n11 10\n","data/atmsg_graph_003_004_rec.txt")
     assert_file_equal("15 13\n16 11\n","data/atmsg_graph_003_004_unr.txt")
-    assert_file_equal("11 2\n13 3\n15 1\n10 2\n14 2\n","data/atmsg_people_003_degree.txt")
+    assert_file_equal("11 2 1\n10 2 2\n13 3 2\n15 1 2\n14 2 2\n16 0 1\n","data/atmsg_people_003_degree.txt")
     assert_file_equal("10 11\n10 13\n14 15\n13 14\n13 15\n11 16\n","data/atmsg_people_003_edges.txt")
     assert_file_equal(nil,"data/atmsg_graph_003_005_rec.txt")
     assert_file_equal("16 11\n","data/atmsg_graph_003_005_unr.txt")
@@ -75,6 +75,10 @@ class TestAtMessages2 < Test::Unit::TestCase
     @at2.build_rur_outdegrees
     @atm.find_degrees_edges
     @at2.build_rur_prediction
+    
+    @at2.build_message_count
+    @at2.build_rur_prediction(:inmsg)
+    @at2.build_rur_prediction(:msgdeg)
     
     assert_file_equal("10 2 0 0\n14 2 0 0\n11 1 0 1\n13 2 0 1\n15 1 1 0\n16 0 1 0\n","data/atmsg_graph_003_003_rur_outdegrees.txt")
     assert_file_equal("10 1 0 0\n14 0 0 0\n11 1 0 1\n13 0 0 1\n15 0 1 0\n16 0 1 0\n","data/atmsg_graph_003_004_rur_outdegrees.txt")

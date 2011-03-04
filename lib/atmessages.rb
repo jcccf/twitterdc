@@ -85,32 +85,36 @@ class AtMessages
     File.rename(@graph_filename+"~", @graph_filename)
   end
   
-  # Find the degree counts and edges in the graph corresponding to n
+  # Find the in/out-degree counts and edges in the graph corresponding to n
+  # Output is "a b c" lines where a is the node name, b is the indegree,
+  # c is the outdegree
   def find_degrees_edges
     raise RuntimeError, "Call filter_graph_by_users before find_degrees" unless File.exist? @graph_filename
     
     # Open graph file and read in undirected edges
-    puts "Reading in edges from graph & calculating indegree..."
+    puts "Reading in edges from graph & calculating in/outdegree..."
     edges = {}
     degrees = {}
-    File.open(@graph_filename,"r").each do |l|
+    File.open(@c.graph,"r").each do |l|
       parts = l.split(' ',3)
       id1,id2 = parts[0].to_i, parts[1].to_i
-      degrees[id2] ||= 0
-      degrees[id2] += 1
+      degrees[id2] ||= [0,0]
+      degrees[id1] ||= [0,0]
+      degrees[id2][0] += 1
+      degrees[id1][1] += 1
       id1,id2 = id2,id1 if id2 < id1
       edges[id1] ||= Set.new
       edges[id1].add id2
     end
     
     # Write in-degree count to file
-    puts "Writing in-degree to file..."
-    File.open(@people_deg_filename+"~", "w") do |f|
+    puts "Writing in/out-degree to file..."
+    File.open(@c.degrees+"~", "w") do |f|
       degrees.each do |k,v|
-        f.puts "#{k} #{v}"
+        f.puts "#{k} #{v[0]} #{v[1]}"
       end
     end
-    File.rename(@people_deg_filename+"~", @people_deg_filename)
+    File.rename(@c.degrees+"~", @c.degrees)
     
     # Count in-degrees & loop through edges and count and write to file
     puts "Writing undirected edges to file..."

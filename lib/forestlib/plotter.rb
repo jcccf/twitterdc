@@ -76,13 +76,13 @@ module ForestLib
     end
     
     # Plot a heat map, with z values corresponding to intensity
-    def self.plotHeatMap(title,xlabel,ylabel,heatmap,output_file,plot_type="points pt 7 palette")
+    def self.plotHeatMap(title,xlabel,ylabel,heatmap,output_file,x_range = '[0:60]', y_range='[0:60]', plot_type="points pt 7 palette")
       Gnuplot.open do |gp|
         Gnuplot::SPlot.new( gp ) do |plot|
           plot.term 'pngcairo size 600,600'
           
-          plot.yrange '[0:60]'
-          plot.xrange '[0:60]'
+          plot.yrange x_range
+          plot.xrange y_range
 
           plot.set "size square"
           plot.title title
