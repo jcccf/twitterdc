@@ -40,6 +40,11 @@ module TwitterDc
     def people_msg
       @base+"/atmsg_people_"+sprintf("%03d",@n)+"_msg.txt"
     end
+    
+    # List of edges in the graph of people who've sent >= n messages
+    def edges
+      @base+"/atmsg_people_"+sprintf("%03d",@n)+"_edges.txt"
+    end
 
     # Reciprocated Graph File (with Reptition)
     def reciprocated(eye=@k, &block)
@@ -120,6 +125,36 @@ module TwitterDc
     # Image of prediction based on in-messages / in-degree
     def rur_pred_msgdeg_image(eye=@k, &block)
       base_n_k("rur_pred_msgdeg",eye, true, &block)
+    end
+    
+    # Prediction based on ratio of indegree to outdegree
+    def rur_pred_inoutdeg(eye=@k, &block)
+      base_n_k("rur_pred_inoutdeg",eye, &block)
+    end
+    
+    # Image of prediction based on ratio of indegree to outdegree
+    def rur_pred_inoutdeg_image(eye=@k, &block)
+      base_n_k("rur_pred_inoutdeg",eye, true, &block)
+    end
+    
+    # Prediction based on number of mutual friends
+    def rur_pred_mutual(eye=@k, &block)
+      base_n_k("rur_pred_mutual",eye, &block)
+    end
+    
+    # Image of prediction based on number of mutual friends
+    def rur_pred_mutual_image(eye=@k, &block)
+      base_n_k("rur_pred_mutual",eye, true, &block)
+    end
+    
+    # Prediction based on number of mutual friends (indegree)
+    def rur_pred_mutualin(eye=@k, &block)
+      base_n_k("rur_pred_mutualin",eye, &block)
+    end
+    
+    # Image of prediction based on number of mutual friends (indegree)
+    def rur_pred_mutualin_image(eye=@k, &block)
+      base_n_k("rur_pred_mutualin",eye, true, &block)
     end
     
     # Unreciprocated Graph File

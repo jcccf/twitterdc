@@ -27,6 +27,45 @@ module ForestLib
       h
     end
     
+    # Converts "a b" on each line into "a => [b1,...,bn]" mappings
+    def self.to_hash_array(input_file, index_1 = 0, index_2 = 1)
+      self.validate(input_file)
+      maxsplit = [index_1, index_2].max + 1
+      h = {}
+      File.open(input_file,"r").each do |l|
+        parts = l.split(" ", maxsplit)
+        i1, i2 = parts[index_1].to_i, parts[index_2].to_i
+        h[i1] ||= []
+        h[i1] << i2
+      end
+      h
+    end
+    
+    # Converts a line into an "a => b" mapping, with "b" a float.
+    # b is calculated using the block provided to the method
+    # the method is provided with arguments corresponding to the indices
+    # provided after index_1.
+    # Ex. to_hash_float_block("test.txt", 1, 3, 4) { |x,y| x*y } returns
+    # mappings of the integer at index 1 on each line to the product of the integers
+    # at indices 3 and 4. If a line is "1 2 3 4 5", this gets mapped to 2 => 20
+    def self.to_hash_float_block(input_file, index_1, *args)
+      # TODO Check if args are all integers
+      
+      raise ArgumentError, "Provide a Block Please!" if !block_given?
+      
+      num_vars = args.count
+      self.validate(input_file)
+      maxsplit = [args.max, index_1].max + 1
+      h = {}
+      File.open(input_file,"r").each do |l|
+        parts = l.split(" ", maxsplit)
+        yield_args = []
+        args.each { |idx| yield_args << parts[idx].to_f }
+        h[parts[index_1].to_i] = yield yield_args
+      end
+      h
+    end
+    
     private
     
     # Validate each token as an integer
@@ -43,4 +82,9 @@ module ForestLib
     end
     
   end
+  
+  # x = Processor.to_hash_float_block("../../test/data/atmsg_graph_003_003_rur_pred_inmsg.txt",1,3,4,5) do |f1,f2,f3|
+  #   f1 * f2 * f3
+  # end
+  # puts x.inspect
 end

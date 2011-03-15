@@ -124,56 +124,89 @@ class AtMessages2
   def build_rur_prediction(parameter=:degree)
     @c.unreciprocated do |i,unr_filename|
       
-      dupchecker = Set.new
-      
-      # Read in Unreciprocated Edges
-      puts "Reading in Unreciprocated Edges"
-      edges = []
-      rec_filename = @c.reciprocated_norep(i)
-      File.open(unr_filename,"r").each do |l|
-        e1, e2 = l.split.map!{|v| v.to_i }
-        e1, e2 = e2, e1 if e1 > e2
-        raise RuntimeError "Not supposed to exist" if dupchecker.include? [e1,e2]
-        dupchecker.add [e1, e2]
-        edges << [e1, e2, 1]
-      end
-      
-      # Read in Reciprocated Edges
-      puts "Reading in Reciprocated Edges"
-      tmp_edges = []
-      File.open(rec_filename,"r").each do |l|
-        e1, e2 = l.split.map!{|v| v.to_i }
-        e1, e2 = e2, e1 if e1 > e2
-        raise RuntimeError "Not supposed to exist" if dupchecker.include? [e1,e2]
-        dupchecker.add [e1, e2]
-        tmp_edges << [e1, e2, 2]     
-      end
-      
-      # Take N random entries from the reciprocated edge list 
-      # where N = # of unreciprocated edges
-      edges = edges | (tmp_edges.sort_by{rand}[0..(edges.count-1)])
-      
+      # Read in edges
+      edges = read_rur_edges(unr_filename, @c.reciprocated_norep(i))
       #puts edges.inspect
     
       # Read in degree counts
       degrees = case parameter
-        when :degree then Processor.to_hash_float(@c.degrees)
-        when :inmsg then Processor.to_hash_float(@c.people_msg, 0, 1)
-        when :outmsg then Processor.to_hash_float(@c.people_msg, 0, 2)
-        when :msgdeg then
-          msgs = Processor.to_hash_float(@c.people_msg, 0, 1)
-          degs = Processor.to_hash_float(@c.degrees)
-          degs.merge(msgs){ |k,deg,msg| msg/deg }
-        else raise ArgumentException "Unknown Parameter"
-        end
+      when :degree then Processor.to_hash_float(@c.degrees)
+      when :inmsg then Processor.to_hash_float(@c.people_msg, 0, 1)
+      when :outmsg then Processor.to_hash_float(@c.people_msg, 0, 2)
+      when :msgdeg then
+        msgs = Processor.to_hash_float(@c.people_msg, 0, 1)
+        degs = Processor.to_hash_float(@c.degrees)
+        degs.merge(msgs){ |k,deg,msg| msg/deg }
+      when :inoutdeg then
+        Processor.to_hash_float_block(@c.degrees, 0, 1, 2) { |indeg,outdeg| (indeg > outdeg ? 1.0-outdeg/indeg : 1.0-indeg/outdeg) }
+      when :mutual then
+        Processor.to_hash_float(@c.degrees, 0, 2) # Get outdegrees
+      when :mutualin then
+        Processor.to_hash_float(@c.degrees) # Get indegrees
+      else raise ArgumentException "Unknown Parameter"
+      end
+      
+      # Read in second parameter if required
+      para2 = case parameter
+      when :mutual then
+        Processor.to_hash_array(@c.edges)
+      when :mutualin then
+        Processor.to_hash_array(@c.edges, 1, 0) # Reverse
+      end
         
       outfile = case parameter
         when :degree then @c.rur_pred_degree(i)
         when :inmsg then @c.rur_pred_inmsg(i)
         when :outmsg then @c.rur_pred_outmsg(i)
         when :msgdeg then @c.rur_pred_msgdeg(i)
+        when :inoutdeg then @c.rur_pred_inoutdeg(i)
+        when :mutual then @c.rur_pred_mutual(i)
+        when :mutualin then @c.rur_pred_mutualin(i)
         else raise ArgumentException "Unknown Parameter"
         end
+                
+      rec_no, rec_correct, unr_no, unr_correct, e, e_inv = 0, 0, 0, 0, 0.0, 0.0
+      
+      # Choose what kind of prediction heuristic to use
+      edge_block = case parameter
+      when :degree, :inmsg, :outmsg, :msgdeg
+        Proc.new do |e1,e2,type|
+          ratio = (degrees[e1] && degrees[e2]) ? degrees[e1]/degrees[e2] : 0
+          # For each edge, predict reciprocity, recino += 1
+          # If the edge was reciprocated, correct += 1
+          if e <= ratio && ratio <= e_inv
+            rec_no += 1
+            rec_correct += 1 if type == 2
+          else
+            unr_no += 1
+            unr_correct += 1 if type == 1
+          end
+        end
+      when :inoutdeg
+        Proc.new do |e1,e2,type|
+          # TODO How about if degrees[e1/e2] == 1, then should predict unrecip!
+          # TODO Alternatively, do average of e1 and e2? Or max?
+          if 1.0 - degrees[e1] * degrees[e2] >= e
+            rec_no += 1
+            rec_correct += 1 if type == 2
+          else
+            unr_no += 1
+            unr_correct += 1 if type == 1
+          end
+        end
+      when :mutual, :mutualin
+        Proc.new do |e1,e2,type|
+          num_mutual = (para2[e1] && para2[e2]) ? 2*(para2[e1] & para2[e2]).size : 0
+          total_deg = [degrees[e1] + degrees[e2] - 2.0, 0.0].max
+          if total_deg == 0 || num_mutual / total_deg >= e
+            rec_no += 1
+            rec_correct += 1 if type == 2
+          else
+            unr_no += 1
+            unr_correct += 1 if type == 1
+          end
+        end
+      end
         
       puts "Calculating Predictions"
       File.open(outfile+"~","w") do |f|
@@ -181,26 +214,8 @@ class AtMessages2
         ((@c.e1)..(@c.e2)).step(@c.st) do |j|
           e = j / 100.0
           e_inv = 1 / e
-        
-          # puts "e is #{e}"
-        
-          rec_no = 0
-          rec_correct = 0
-          unr_no = 0
-          unr_correct = 0
-          edges.each do |e1, e2, type|
-            ratio = (degrees[e1] && degrees[e2]) ? degrees[e1]/degrees[e2] : 0
-            # For each edge, predict reciprocity, recino += 1
-            # If the edge was reciprocated, correct += 1
-            if e <= ratio && ratio <= e_inv
-              rec_no += 1
-              rec_correct += 1 if type == 2
-            else
-              unr_no += 1
-              unr_correct += 1 if type == 1
-            end            
-          end
-        
+          rec_no, rec_correct, unr_no, unr_correct = 0, 0, 0, 0
+          edges.each &edge_block
           f.puts "#{j} #{rec_no} #{rec_correct} #{unr_no} #{unr_correct} #{edges.count}"
         end
       end
@@ -232,6 +247,9 @@ class AtMessages2
         when :inmsg then @c.rur_pred_inmsg_image(i)
         when :outmsg then @c.rur_pred_outmsg_image(i)
         when :msgdeg then @c.rur_pred_msgdeg_image(i)
+        when :inoutdeg then @c.rur_pred_inoutdeg_image(i)
+        when :mutual then @c.rur_pred_mutual_image(i)
+        when :mutualin then @c.rur_pred_mutualin_image(i)
         else raise ArgumentException "Unknown Parameter"
         end
       
@@ -243,6 +261,9 @@ class AtMessages2
       when :inmsg then @c.rur_pred_inmsg &things_to_do
       when :outmsg then @c.rur_pred_outmsg &things_to_do
       when :msgdeg then @c.rur_pred_msgdeg &things_to_do
+      when :inoutdeg then @c.rur_pred_inoutdeg &things_to_do
+      when :mutual then @c.rur_pred_mutual &things_to_do
+      when :mutualin then @c.rur_pred_mutualin &things_to_do
       else raise ArgumentException "Unknown Parameter"
       end
   end
@@ -324,6 +345,45 @@ class AtMessages2
       end
     end
     File.rename(@c.people_msg+"~",@c.people_msg)
+  end
+  
+  private
+  
+  # Read in reciprocated and unreciprocated edges and create a combined edge list with
+  # equal proportions of reciprocated and unreciprocated edges by choosing a random number
+  # of edges from the reciprocated graph equal to the number of edges in the unreciprocated
+  # graph.
+  def read_rur_edges(unr_filename, rec_filename)
+    
+    dupchecker = Set.new
+    
+    # Read in Unreciprocated Edges
+    puts "Reading in Unreciprocated Edges"
+    edges = []
+    File.open(unr_filename,"r").each do |l|
+      e1, e2 = l.split.map!{|v| v.to_i }
+      e1, e2 = e2, e1 if e1 > e2
+      raise RuntimeError "Not supposed to exist" if dupchecker.include? [e1,e2]
+      dupchecker.add [e1, e2]
+      edges << [e1, e2, 1]
+    end
+    
+    # Read in Reciprocated Edges
+    puts "Reading in Reciprocated Edges"
+    tmp_edges = []
+    File.open(rec_filename,"r").each do |l|
+      e1, e2 = l.split.map!{|v| v.to_i }
+      e1, e2 = e2, e1 if e1 > e2
+      raise RuntimeError "Not supposed to exist" if dupchecker.include? [e1,e2]
+      dupchecker.add [e1, e2]
+      tmp_edges << [e1, e2, 2]     
+    end
+    
+    # Take N random entries from the reciprocated edge list 
+    # where N = # of unreciprocated edges
+    edges = edges | (tmp_edges.sort_by{rand}[0..(edges.count-1)])
+    
+    edges
   end
   
 end

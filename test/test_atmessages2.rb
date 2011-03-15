@@ -79,6 +79,8 @@ class TestAtMessages2 < Test::Unit::TestCase
     @at2.build_message_count
     @at2.build_rur_prediction(:inmsg)
     @at2.build_rur_prediction(:msgdeg)
+    @at2.build_rur_prediction(:inoutdeg)
+    @at2.build_rur_prediction(:mutual)
     
     assert_file_equal("10 2 0 0\n14 2 0 0\n11 1 0 1\n13 2 0 1\n15 1 1 0\n16 0 1 0\n","data/atmsg_graph_003_003_rur_outdegrees.txt")
     assert_file_equal("10 1 0 0\n14 0 0 0\n11 1 0 1\n13 0 0 1\n15 0 1 0\n16 0 1 0\n","data/atmsg_graph_003_004_rur_outdegrees.txt")
