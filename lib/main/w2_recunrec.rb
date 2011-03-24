@@ -78,6 +78,18 @@ when 42
 when 43
   puts "Building the Edge Prediction Plots using Mutual Receives / Indegree"
   am.build_rur_prediction_plot(:mutualin)
+when 44
+  puts "Predicting Edges in the Graph using Mutual Receives / Neighbors"
+  am.build_rur_prediction(:mutualin_nbrs)
+when 45
+  puts "Building the Edge Prediction Plots using Mutual Receives / Neighbors"
+  am.build_rur_prediction_plot(:mutualin_nbrs)
+when 46
+  puts "Predicting Edges in the Graph using Mutual Receives"
+  am.build_rur_prediction(:mutualin_abs)
+when 47
+  puts "Building the Edge Prediction Plots using Mutual Receives"
+  am.build_rur_prediction_plot(:mutualin_abs)
 when 50
   puts "Building In/Out-degree Counts"
   am.build_degree_counts

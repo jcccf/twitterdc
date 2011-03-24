@@ -8,6 +8,10 @@ Synopsis
 --------
 A set of ruby scripts designed to analyze graph data.
 
+Requirements
+------------
+Gems - ai4r
+
 ForestLib
 ---------
 A set of classes which allow different graph-theoretic properties to be calculated, and also helper classes to parse source files.

@@ -141,7 +141,7 @@ class AtMessages2
         Processor.to_hash_float_block(@c.degrees, 0, 1, 2) { |indeg,outdeg| (indeg > outdeg ? 1.0-outdeg/indeg : 1.0-indeg/outdeg) }
       when :mutual then
         Processor.to_hash_float(@c.degrees, 0, 2) # Get outdegrees
-      when :mutualin then
+      when :mutualin, :mutualin_nbrs, :mutualin_abs then
         Processor.to_hash_float(@c.degrees) # Get indegrees
       else raise ArgumentException "Unknown Parameter"
       end
@@ -150,7 +150,7 @@ class AtMessages2
       para2 = case parameter
       when :mutual then
         Processor.to_hash_array(@c.edges)
-      when :mutualin then
+      when :mutualin, :mutualin_nbrs, :mutualin_abs then
         Processor.to_hash_array(@c.edges, 1, 0) # Reverse
       end
         
@@ -162,6 +162,8 @@ class AtMessages2
         when :inoutdeg then @c.rur_pred_inoutdeg(i)
         when :mutual then @c.rur_pred_mutual(i)
         when :mutualin then @c.rur_pred_mutualin(i)
+        when :mutualin_nbrs then @c.rur_pred_mutualin_nbrs(i)
+        when :mutualin_abs then @c.rur_pred_mutualin_abs(i)
         else raise ArgumentException "Unknown Parameter"
         end
                 
@@ -206,12 +208,35 @@ class AtMessages2
             unr_correct += 1 if type == 1
           end
         end
+      when :mutualin_nbrs
+        Proc.new do |e1,e2,type|
+          num_mutual = (para2[e1] && para2[e2]) ? (para2[e1] & para2[e2]).size : 0
+          total_nbrs = ((para2[e1] ? para2[e1] : []) | (para2[e2] ? para2[e2] : [])).size
+          if total_nbrs == 0 || (num_mutual / (total_nbrs-0.0)) >= e
+            rec_no += 1
+            rec_correct += 1 if type == 2
+          else
+            unr_no += 1
+            unr_correct += 1 if type == 1
+          end
+        end
+      when :mutualin_abs
+        Proc.new do |e1,e2,type|
+          num_mutual = (para2[e1] && para2[e2]) ? (para2[e1] & para2[e2]).size : 0
+          if num_mutual >= e * 100
+            rec_no += 1
+            rec_correct += 1 if type == 2
+          else
+            unr_no += 1
+            unr_correct += 1 if type == 1
+          end
+        end
       end
         
       puts "Calculating Predictions"
       File.open(outfile+"~","w") do |f|
         # Step through each threshold
-        ((@c.e1)..(@c.e2)).step(@c.st) do |j|
+        @c.range_array.each do |j|
           e = j / 100.0
           e_inv = 1 / e
           rec_no, rec_correct, unr_no, unr_correct = 0, 0, 0, 0
@@ -250,6 +275,8 @@ class AtMessages2
         when :inoutdeg then @c.rur_pred_inoutdeg_image(i)
         when :mutual then @c.rur_pred_mutual_image(i)
         when :mutualin then @c.rur_pred_mutualin_image(i)
+        when :mutualin_nbrs then @c.rur_pred_mutualin_nbrs_image(i)
+        when :mutualin_abs then @c.rur_pred_mutualin_abs_image(i)
         else raise ArgumentException "Unknown Parameter"
         end
       
@@ -264,6 +291,8 @@ class AtMessages2
       when :inoutdeg then @c.rur_pred_inoutdeg &things_to_do
       when :mutual then @c.rur_pred_mutual &things_to_do
       when :mutualin then @c.rur_pred_mutualin &things_to_do
+      when :mutualin_nbrs then @c.rur_pred_mutualin_nbrs &things_to_do
+      when :mutualin_abs then @c.rur_pred_mutualin_abs &things_to_do
       else raise ArgumentException "Unknown Parameter"
       end
   end
@@ -346,8 +375,6 @@ class AtMessages2
     end
     File.rename(@c.people_msg+"~",@c.people_msg)
   end
-  
-  private
   
   # Read in reciprocated and unreciprocated edges and create a combined edge list with
   # equal proportions of reciprocated and unreciprocated edges by choosing a random number

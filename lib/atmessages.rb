@@ -102,7 +102,7 @@ class AtMessages
       degrees[id1] ||= [0,0]
       degrees[id2][0] += 1
       degrees[id1][1] += 1
-      id1,id2 = id2,id1 if id2 < id1
+      #id1,id2 = id2,id1 if id2 < id1
       edges[id1] ||= Set.new
       edges[id1].add id2
     end
@@ -213,141 +213,6 @@ class AtMessages
     end
   end
   
-  # Find the strongly connected components in the predicted unreciprocated subgraphs based 
-  # on degrees of original graph
-  def find_scc_on_degree(min,max,step)
-    
-    # Check that the required files for computation exist
-    (min..max).step(step) do |i|
-      raise RuntimeError, "Run build_prediction_on_degree before find_scc_on_degree" unless File.exist? @c.unreciprocated_pred_deg(i)
-    end
-    
-    (min..max).step(step) do |i|
-      scc_filename = @c.scc_of_unreciprocated_pred_deg(i)
-      unr_filename = @c.unreciprocated_pred_deg(i)
-      
-      puts "Now reading in graph for #{i}"
-      a = AdjGraph.new
-      File.open(unr_filename,"r") do |f|
-        while ln = f.gets
-          parts = ln.split
-          a.add_directed_edge(parts[0].to_i,parts[1].to_i)
-        end
-      end
-    
-      puts "Now calculating predicted by degree SCC for #{i}"
-      File.open(scc_filename+"~","w") do |f|
-        f.puts a.tarjan_string_limit(1000)
-      end
-      File.rename(scc_filename+"~", scc_filename)
-    end
-  end
-  
-  
-  
-  # Build the reciprocated and unreciprocated subgraphs based on the degrees of the original
-  # graph, and looking at the ratio e
-  # Note! The reciprocated subgraph DOES NOT repeat edges!
-  def build_prediction_on_degree(min,max,step)
-    
-    puts "Reading in degrees..."
-    
-    degrees = Processor.to_hash_float(@people_deg_filename)
-    #puts degrees.inspect
-    (min..max).step(step) do |i|
-      
-      puts "Building for #{i}"
-      
-      e = i/100.0
-      e_inv = 1/e
-      
-      File.open(@c.reciprocated_pred_deg(i)+"~","w") do |r|
-        File.open(@c.unreciprocated_pred_deg(i)+"~","w") do |u|
-          File.open(@people_edge_filename, "r").each do |l|
-            id1,id2 = l.split.map{ |x| x.to_i }
-            ratio = (degrees[id1] && degrees[id2]) ? degrees[id1]/degrees[id2] : 0
-            # puts ratio
-            if e <= ratio && ratio <= e_inv
-              r.puts l
-            else
-              u.puts l
-            end
-          end
-        end
-      end
-      File.rename(@c.reciprocated_pred_deg(i)+"~",@c.reciprocated_pred_deg(i))
-      File.rename(@c.unreciprocated_pred_deg(i)+"~",@c.unreciprocated_pred_deg(i))
-    end
-  end
-  
-  # Compare how a prediction based on degree or message count compares with the reciprocated and
-  # unreciprocated subgraphs generated
-  def degree_agreement_with_generated_graphs(min,max,step,type = :degree)
-    raise ArgumentError, "0.0 < e < 1.0" if (min > 100 || min < 0 || max > 100 || max < 0 || max-min < 0)
-    
-    dfile = if type == :msg_count
-      @people_filename
-    elsif type == :degree
-      @people_deg_filename
-    end
-    
-    puts "Loading Degrees..."
-    degrees = {}
-    File.open(dfile,"r").each do |l|
-      id,count = l.split
-      id = id.to_i
-      count = count.to_f
-      degrees[id] = count
-    end
-    
-    (min..max).step(step) do |i|
-      puts "Agreement testing for #{i}"
-      
-      e = i/100.0
-      e_inv = 1/e
-      
-      agree_filename = @c.agreement(i)
-    
-      File.open(agree_filename+"~","w") do |f|
-        @c.reciprocated do |i, rec_filename|
-          match, unmatch, match2, unmatch2 = 0, 0, 0, 0
-          unr_filename = @c.unreciprocated(i)
-          
-          File.open(rec_filename,"r").each do |l|
-            id1,id2 = l.split.map{ |x| x.to_i }
-            ratio = (degrees[id1] && degrees[id2]) ? degrees[id1]/degrees[id2] : 0
-            if e <= ratio && ratio <= e_inv
-              match += 1
-            else
-              unmatch += 1
-            end
-          end
-          
-          puts File.read(unr_filename)
-
-          File.open(unr_filename,"r").each do |l|
-            id1,id2 = l.split.map{ |x| x.to_i }
-            #puts "testing #{id1} #{id2}"
-            ratio = (degrees[id1] && degrees[id2]) ? degrees[id1]/degrees[id2] : 0
-            puts ratio
-            if ratio < e || e_inv < ratio
-              #puts "match #{id1}, #{id2}"
-              match2 += 1
-            else
-              unmatch2 += 1
-            end
-          end
-          ratio = (match+unmatch > 0) ? match/(match+unmatch).to_f : 0
-          ratio2 = (match2+unmatch2 > 0) ? match2/(match2+unmatch2).to_f : 0
-          # Divide by 2 below since we count reciprocated matches twice
-          f.puts "%d %.4f %.4f %d %d %d %d" % [i, ratio, ratio2, match/2, unmatch/2, match2, unmatch2] 
-        end
-      end
-    
-      File.rename(agree_filename+"~", agree_filename)
-    end
-  end
-  
   # Plot the strongly connected component counts on a chart
   def plot_scc_graphs
     Dir.mkdir @c.images_dir unless File.directory? @c.images_dir
@@ -360,32 +225,6 @@ class AtMessages
       yp << File.read(f).split(" ",2)[0].to_f / ybase[i].to_f
     end
     Plotter.plot("SCC for Unreciprocated","Threshold","Size of Largest SCC",xp,yp,@c.scc_of_unreciprocated_image)
-  end
-  
-  def plot_agreement_graphs(min,max,step)
-    Dir.mkdir @c.images_dir unless File.directory? @c.images_dir
-    
-    xpN, ypN, ypN2, titles = [], [], [], []
-    
-    (min..max).step(step) do |i|
-      agree_file = @c.agreement(i)
-      xp, yp, yp2 = [], [], []
-      File.open(agree_file,"r").each do |l|
-        parts = l.split(" ")
-        xp << parts[0].to_f
-        yp << parts[1].to_f
-        yp2 << parts[2].to_f
-      end
-      
-      xpN << xp
-      ypN << yp
-      ypN2 << yp2
-      titles << i
-    end
-    
-    Plotter.plotN("Agreement for Reciprocated for n=#{@c.n}","Threshold","Proportion in Agreement",titles,xpN,ypN,@c.reciprocated_agreement_image)
-    Plotter.plotN("Agreement for Unreciprocated for n=#{@c.n}","Threshold","Proportion in Agreement",titles,xpN,ypN2,@c.unreciprocated_agreement_image)
-    
   end
   
   private

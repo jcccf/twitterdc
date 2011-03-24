@@ -12,6 +12,14 @@ module TwitterDc
       @st = st
     end
     
+    def range_array
+      a = []
+      (e1..(e1+st)).each { |i| a << i }
+      ((e1+2*st)..(e2-2*st)).step(st).each { |i| a << i }
+      ([(e2-st),(e1+st+1)].max..e2).each { |i| a << i }
+      a
+    end
+    
     # Base template for files that depend only on n and k
     def base_n_k(suffix, eye=@k, is_image=false)
       folder = is_image ? @base+"/images" : @base
@@ -157,6 +165,26 @@ module TwitterDc
       base_n_k("rur_pred_mutualin",eye, true, &block)
     end
     
+    # Prediction based on number of mutual friends (indegree)
+    def rur_pred_mutualin_nbrs(eye=@k, &block)
+      base_n_k("rur_pred_mutualin_nbrs",eye, &block)
+    end
+    
+    # Image of prediction based on number of mutual friends (indegree)
+    def rur_pred_mutualin_nbrs_image(eye=@k, &block)
+      base_n_k("rur_pred_mutualin_nbrs",eye, true, &block)
+    end
+    
+    # Prediction based on number of mutual friends (indegree)
+    def rur_pred_mutualin_abs(eye=@k, &block)
+      base_n_k("rur_pred_mutualin_abs",eye, &block)
+    end
+    
+    # Image of prediction based on number of mutual friends (indegree)
+    def rur_pred_mutualin_abs_image(eye=@k, &block)
+      base_n_k("rur_pred_mutualin_abs",eye, true, &block)
+    end
+    
     # Unreciprocated Graph File
     def unreciprocated(eye=@k, &block)
       base_n_k("unr",eye, &block)
@@ -204,14 +232,18 @@ module TwitterDc
       @base+"/atmsg_people_"+sprintf("%03d",@n)+"_degree.txt"
     end
     
+    def csv_training(eye=@k, &block)
+      base_n_k("csv_training",eye, &block)
+    end
+    
+    def csv_test(eye=@k, &block)
+      base_n_k("csv_test",eye, &block)
+    end
+    
   end
 end
-
+# 
 # puts "hello"
 # include TwitterDc
-# c = Constants.new("heasd",10,2,20)
-# c.scc_of_unreciprocated do |i,f|
-#   puts "#{i} AND #{f}"
-# end
-# 
-# puts c.scc_of_unreciprocated(1000)
+# c = Constants.new("heads",10,2,20,0,100,5)
+# puts c.range_array

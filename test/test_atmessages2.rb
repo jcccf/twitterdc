@@ -2,12 +2,14 @@ require "test/unit"
 require "stringio"
 require_relative "../lib/atmessages"
 require_relative "../lib/atmessages2"
+require_relative "../lib/atmessages3"
  
 class TestAtMessages2 < Test::Unit::TestCase
   
   def setup
     @atm = AtMessages.new("data/atmessages_graph2.dat","data",3,3,5)
-    @at2 = AtMessages2.new("data/atmessages_graph2.dat","data",3,3,5,75,90,15)
+    @at2 = AtMessages2.new("data/atmessages_graph2.dat","data",3,3,5,0,100,5)
+    @at3 = AtMessages3.new("data/atmessages_graph2.dat","data",3,3,5,0,100,5)
   end
   
   def assert_file_equal(string,filename)
@@ -27,7 +29,7 @@ class TestAtMessages2 < Test::Unit::TestCase
     assert_file_equal("10 11\n11 10\n","data/atmsg_graph_003_004_rec.txt")
     assert_file_equal("15 13\n16 11\n","data/atmsg_graph_003_004_unr.txt")
     assert_file_equal("11 2 1\n10 2 2\n13 3 2\n15 1 2\n14 2 2\n16 0 1\n","data/atmsg_people_003_degree.txt")
-    assert_file_equal("10 11\n10 13\n14 15\n13 14\n13 15\n11 16\n","data/atmsg_people_003_edges.txt")
+    assert_file_equal("10 11\n10 13\n14 15\n14 13\n11 10\n13 10\n13 14\n15 13\n15 14\n16 11\n","data/atmsg_people_003_edges.txt")
     assert_file_equal(nil,"data/atmsg_graph_003_005_rec.txt")
     assert_file_equal("16 11\n","data/atmsg_graph_003_005_unr.txt")
     assert_file_equal("10 7 7\n11 9 4\n13 13 6\n14 8 9\n15 3 9\n16 0 5\n","data/atmsg_people_003_msg.txt")
@@ -81,6 +83,11 @@ class TestAtMessages2 < Test::Unit::TestCase
     @at2.build_rur_prediction(:msgdeg)
     @at2.build_rur_prediction(:inoutdeg)
     @at2.build_rur_prediction(:mutual)
+    @at2.build_rur_prediction(:mutualin_nbrs)
+    @at2.build_rur_prediction(:mutualin_abs)
+    
+    @at3.generate_csv_files(3)
+    @at3.decision_tree_generate(3)
     
     assert_file_equal("10 2 0 0\n14 2 0 0\n11 1 0 1\n13 2 0 1\n15 1 1 0\n16 0 1 0\n","data/atmsg_graph_003_003_rur_outdegrees.txt")
     assert_file_equal("10 1 0 0\n14 0 0 0\n11 1 0 1\n13 0 0 1\n15 0 1 0\n16 0 1 0\n","data/atmsg_graph_003_004_rur_outdegrees.txt")

@@ -13,22 +13,29 @@ st = (ARGV.length > 6 ? ARGV[6] : 5).to_i
 
 am = AtMessages.new("../../AllCommunicationPairs_users0Mto100M.txt","../../data",n,k,k2)
 
+puts "For #{n}, #{k} to #{k2}, with THETA = #{e1} to #{e2} in increments of #{st}..."
+
 case stage
 when 1
-  puts "Building degrees and edges for #{n}"
+  puts "Finding Users with > #{n} messages..."
+  atm.filter_users_by_messages
+  puts "Finding Edges for #{n}..."
+  atm.filter_graph_by_users
+when 2
+  puts "Building Graph and separating..."
+  am.build_graph
+when 3
+  puts "Finding Strongly Connected Components..."
+  am.find_scc
+when 4
+  puts "Building degrees and edges..."
   am.find_degrees_edges
-when 2 # DO NOT USE
-  puts "Testing Agreement for #{n}, #{k} to #{k2} for e=#{e1} to #{e2} in steps of #{st}..."
-  am.degree_agreement_with_generated_graphs(e1,e2,st)
-when 3 # DO NOT USE
-  puts "Buliding predicted reciprocated and unreciprocated subgraphs for #{n}"
-  am.build_prediction_on_degree(e1,e2,st)
-when 4 # DO NOT USE
-  puts "Building SCC for predicted unreciprocated subgraphs for #{n}"
-  am.find_scc_on_degree(e1,e2,st)
-when 5 # DO NOT USE
-  puts "Plotting Agreement Graphs"
-  am.plot_agreement_graphs(e1,e2,st)
+when 10
+  puts "Counting unique nodes for Reciprocated and Unreciprocated Graphs..."
+  am.count_nodes_rec_unr
+when 11
+  puts "Plotting SCC Graphs..."
+  am.plot_scc_graphs
 else
   puts "Error in Stage Selection!"
 end
