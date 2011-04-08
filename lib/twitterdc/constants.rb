@@ -26,32 +26,32 @@ module TwitterDc
       extension = is_image ? "png" : "txt"
       if block_given?
         @k.upto(@k2) do |i|
-          filename = sprintf("%s/atmsg_graph_%03d_%03d_%s.%s", folder, @n, i, suffix, extension)
+          filename = sprintf("%s/%03d_%03d_%s.%s", folder, @n, i, suffix, extension)
           yield i, filename
         end
       else
-        sprintf("%s/atmsg_graph_%03d_%03d_%s.%s", folder, @n, eye, suffix, extension)
+        sprintf("%s/%03d_%03d_%s.%s", folder, @n, eye, suffix, extension)
       end
     end
     
     # List of people and also the number of messages each person sent (in total in the full graph)
     def people
-      @base+"/atmsg_people_"+sprintf("%03d",@n)+".txt"
+      @base+"/people_"+sprintf("%03d",@n)+".txt"
     end
     
     # The subgraph that everything else is based on
     def graph
-      @base+"/atmsg_graph_"+sprintf("%03d",@n)+".txt"
+      @base+"/"+sprintf("%03d",@n)+".txt"
     end
     
     # Number of messages each person sent/received in the subgraph
     def people_msg
-      @base+"/atmsg_people_"+sprintf("%03d",@n)+"_msg.txt"
+      @base+"/people_"+sprintf("%03d",@n)+"_msg.txt"
     end
     
     # List of edges in the graph of people who've sent >= n messages
     def edges
-      @base+"/atmsg_people_"+sprintf("%03d",@n)+"_edges.txt"
+      @base+"/people_"+sprintf("%03d",@n)+"_edges.txt"
     end
 
     # Reciprocated Graph File (with Reptition)
@@ -66,16 +66,16 @@ module TwitterDc
     
     # Reciprocated Node Count File
     def reciprocated_node_count
-      @base+"/atmsg_graph_"+sprintf("%03d",@n)+"_rec_"+sprintf("%03d",@k)+"-"+sprintf("%03d",@k2)+"_ncount.txt"
+      @base+"/"+sprintf("%03d",@n)+"_rec_"+sprintf("%03d",@k)+"-"+sprintf("%03d",@k2)+"_ncount.txt"
     end
     
     def unreciprocated_node_count
-      @base+"/atmsg_graph_"+sprintf("%03d",@n)+"_unr_"+sprintf("%03d",@k)+"-"+sprintf("%03d",@k2)+"_ncount.txt"
+      @base+"/"+sprintf("%03d",@n)+"_unr_"+sprintf("%03d",@k)+"-"+sprintf("%03d",@k2)+"_ncount.txt"
     end
     
     # Reciprocated and Unreciprocated Edge Count File
     def rur_edge_count
-      @base+"/atmsg_graph_"+sprintf("%03d",@n)+"_rur_"+sprintf("%03d",@k)+"-"+sprintf("%03d",@k2)+"_ecount.txt"
+      @base+"/"+sprintf("%03d",@n)+"_rur_"+sprintf("%03d",@k)+"-"+sprintf("%03d",@k2)+"_ecount.txt"
     end
     
     # Number of edges that each person participates in that are reciprocated or unreciprocated
@@ -91,6 +91,11 @@ module TwitterDc
     # Number of edges that each person participates in that are reciprocated or unreciprocated
     def rur_outdegrees_image_alt(eye=@k, &block)
       base_n_k("rur2_outdegrees",eye, true, &block)
+    end
+    
+    # Number of edges that each person participates in that are reciprocated or unreciprocated
+    def rur_outdegrees_image_3d(eye=@k, &block)
+      base_n_k("rur2_outdegrees_3d",eye, true, &block)
     end
     
     # Proportion of edges that each person participates in that are reciprocated or unreciprocated
@@ -165,24 +170,34 @@ module TwitterDc
       base_n_k("rur_pred_mutualin",eye, true, &block)
     end
     
-    # Prediction based on number of mutual friends (indegree)
+    # Prediction based on number of mutual friends (indegree) (Jaccard's Coefficient)
     def rur_pred_mutualin_nbrs(eye=@k, &block)
       base_n_k("rur_pred_mutualin_nbrs",eye, &block)
     end
     
-    # Image of prediction based on number of mutual friends (indegree)
+    # Image of prediction based on number of mutual friends (indegree) (Jaccard's Coefficient)
     def rur_pred_mutualin_nbrs_image(eye=@k, &block)
       base_n_k("rur_pred_mutualin_nbrs",eye, true, &block)
     end
     
-    # Prediction based on number of mutual friends (indegree)
+    # Prediction based on number of mutual friends (indegree) (Absolute number of mutual friends)
     def rur_pred_mutualin_abs(eye=@k, &block)
       base_n_k("rur_pred_mutualin_abs",eye, &block)
     end
     
-    # Image of prediction based on number of mutual friends (indegree)
+    # Image of prediction based on number of mutual friends (indegree) (Absolute number of mutual friends)
     def rur_pred_mutualin_abs_image(eye=@k, &block)
       base_n_k("rur_pred_mutualin_abs",eye, true, &block)
+    end
+    
+    # Prediction based on number of mutual friends (indegree) (Adamic/Adar)
+    def rur_pred_mutualin_wnbrs(eye=@k, &block)
+      base_n_k("rur_pred_mutualin_wnbrs",eye, &block)
+    end
+    
+    # Image of prediction based on number of mutual friends (indegree) (Adamic/Adar)
+    def rur_pred_mutualin_wnbrs_image(eye=@k, &block)
+      base_n_k("rur_pred_mutualin_wnbrs",eye, true, &block)
     end
     
     # Unreciprocated Graph File
@@ -191,15 +206,15 @@ module TwitterDc
     end
     
     def unreciprocated_pred_deg(eye)
-      @base+"/atmsg_graph_"+sprintf("%03d",@n)+"_unr_pred_deg_"+sprintf("%03d",eye)+".txt"
+      @base+"/"+sprintf("%03d",@n)+"_unr_pred_deg_"+sprintf("%03d",eye)+".txt"
     end
     
     def scc_of_unreciprocated_pred_deg(eye)
-      @base+"/atmsg_graph_"+sprintf("%03d",@n)+"_unr_pred_deg_"+sprintf("%03d",eye)+"_scc.txt"
+      @base+"/"+sprintf("%03d",@n)+"_unr_pred_deg_"+sprintf("%03d",eye)+"_scc.txt"
     end
     
     def reciprocated_pred_deg(eye)
-      @base+"/atmsg_graph_"+sprintf("%03d",@n)+"_rec_pred_deg_"+sprintf("%03d",eye)+".txt"
+      @base+"/"+sprintf("%03d",@n)+"_rec_pred_deg_"+sprintf("%03d",eye)+".txt"
     end
     
     # Proportion in Strongly Connected Component in Unreciprocated Graph
@@ -213,24 +228,28 @@ module TwitterDc
     end
     
     def scc_of_unreciprocated_image
-      @base+"/images/atmsg_graph_"+sprintf("%03d",@n)+"_"+sprintf("%03d",@k)+"-"+sprintf("%03d",@k2)+"_unr_scc.png"
+      @base+"/images/"+sprintf("%03d",@n)+"_"+sprintf("%03d",@k)+"-"+sprintf("%03d",@k2)+"_unr_scc.png"
     end
     
     def reciprocated_agreement_image
-      @base+"/images/atmsg_graph_"+sprintf("%03d",@n)+"_agreement_rec.png"
+      @base+"/images/"+sprintf("%03d",@n)+"_agreement_rec.png"
     end
     
     def unreciprocated_agreement_image
-      @base+"/images/atmsg_graph_"+sprintf("%03d",@n)+"_agreement_unr.png"
+      @base+"/images/"+sprintf("%03d",@n)+"_agreement_unr.png"
     end
     
     def agreement(eye)
-      @base+"/atmsg_graph_"+sprintf("%03d",@n)+"_agreement_p#{eye}.txt"
+      @base+"/"+sprintf("%03d",@n)+"_agreement_p#{eye}.txt"
     end
     
     def degrees
-      @base+"/atmsg_people_"+sprintf("%03d",@n)+"_degree.txt"
+      @base+"/people_"+sprintf("%03d",@n)+"_degree.txt"
     end
+    
+    #
+    # Decision Tree Constants
+    #
     
     def csv_training(eye=@k, &block)
       base_n_k("csv_training",eye, &block)
@@ -238,6 +257,18 @@ module TwitterDc
     
     def csv_test(eye=@k, &block)
       base_n_k("csv_test",eye, &block)
+    end
+    
+    def decision_rules(eye=@k, &block)
+      base_n_k("decision_rules",eye, &block)
+    end
+    
+    def decision_results(eye=@k, &block)
+      base_n_k("decision_results",eye, &block)
+    end
+    
+    def decision_results_bon(i, eye=@k, &block)
+      base_n_k("decision_results_basedon_"+i.to_s, eye, &block)
     end
     
   end

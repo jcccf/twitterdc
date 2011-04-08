@@ -6,6 +6,7 @@ require_relative 'forestlib/counter'
 require_relative 'forestlib/processor'
 require_relative 'forestlib/disjoint_set'
 require_relative 'twitterdc/constants'
+require_relative 'twitterdc/reciprocity_heuristics'
 include ForestLib
 include TwitterDc
 
@@ -98,9 +99,12 @@ class AtMessages2
   # Plot the reciprocated/unreciprocated outdegrees for each person as a scatter plot
   def build_rur_outdegrees_plot
     @c.rur_outdegrees do |i,out_filename|
-      cnt, cntalt, cntratio = {}, {}, {}
+      cnt, cntalt, cntratio, cnt3d = {}, {}, {}, {}
       File.open(out_filename,"r").each do |l|
         p = l.split.map!{|v| v.to_f}
+        cnt3d[p[3]] ||= {}
+        cnt3d[p[3]][p[2]] ||= Hash.new(0)
+        cnt3d[p[3]][p[2]][p[1]] += 1
         cnt[p[1]] ||= Hash.new(0)
         cnt[p[1]][p[2]] += 1
         cntalt[p[1]] ||= Hash.new(0)
@@ -113,6 +117,22 @@ class AtMessages2
       Plotter.plotHeatMap("Reciprocated and Unreciprocated Counts Scatter Plot for k=#{i}","Reciprocated Count","Unreciprocated Count",HeatMapData.new(cnt),@c.rur_outdegrees_image(i))
       Plotter.plotHeatMap("Reciprocated and Unreciprocated Counts Alternative Scatter Plot for k=#{i}","Reciprocated Count","Unreciprocated Count",HeatMapData.new(cntalt),@c.rur_outdegrees_image_alt(i))
       Plotter.plotHeatMap("Reciprocated and Unreciprocated Proportion Scatter Plot for k=#{i}","Reciprocated Count Proportion","Unreciprocated Count Proportion",HeatMapData.new(cntratio),@c.rur_outdegrees_image_ratio(i), '[0:1]', '[0:1]')
+      Plotter.plotHeatMap3D("Reciprocated and Unreciprocated Counts 3D Scatter Plot for k=#{i}","Unreciprocated Count (Someone sent but you didn't reply)","Unreciprocated Count (You sent but there was no reply)",HeatMapData3D.new(cnt3d),@c.rur_outdegrees_image_3d(i))
+    end
+  end
+  
+  def build_rur_preds(parameter=:degree)
+    @c.unreciprocated do |i,unr_filename|
+      edges = read_rur_edges(unr_filename, @c.reciprocated_norep(i))
+      d = case parameter
+      when :degree then ReciprocityHeuristics::Indegree.new(i,@c,edges)
+      when :inmsg then ReciprocityHeuristics::Inmessages.new(i,@c,edges)
+      when :outmsg then ReciprocityHeuristics::Outmessages.new(i,@c,edges)
+      when :msgdeg then ReciprocityHeuristics::MessagesPerDegree.new(i,@c,edges)
+      when :inoutdeg then ReciprocityHeuristics::OutdegreePerIndegree.new(i,@c,edges)
+      else raise ArgumentError, "Invalid parameter supplied to build_rur_preds"
+      end
+      d.output
     end
   end
   
@@ -138,10 +158,10 @@ class AtMessages2
         degs = Processor.to_hash_float(@c.degrees)
         degs.merge(msgs){ |k,deg,msg| msg/deg }
       when :inoutdeg then
-        Processor.to_hash_float_block(@c.degrees, 0, 1, 2) { |indeg,outdeg| (indeg > outdeg ? 1.0-outdeg/indeg : 1.0-indeg/outdeg) }
+        Processor.to_hash_float_block(@c.degrees, 0, 1, 2) { |indeg,outdeg| outdeg/indeg }
       when :mutual then
         Processor.to_hash_float(@c.degrees, 0, 2) # Get outdegrees
-      when :mutualin, :mutualin_nbrs, :mutualin_abs then
+      when :mutualin, :mutualin_nbrs, :mutualin_abs, :mutualin_wnbrs then
         Processor.to_hash_float(@c.degrees) # Get indegrees
       else raise ArgumentException "Unknown Parameter"
       end
@@ -150,7 +170,7 @@ class AtMessages2
       para2 = case parameter
       when :mutual then
         Processor.to_hash_array(@c.edges)
-      when :mutualin, :mutualin_nbrs, :mutualin_abs then
+      when :mutualin, :mutualin_nbrs, :mutualin_abs, :mutualin_wnbrs then
         Processor.to_hash_array(@c.edges, 1, 0) # Reverse
       end
         
@@ -164,31 +184,22 @@ class AtMessages2
         when :mutualin then @c.rur_pred_mutualin(i)
         when :mutualin_nbrs then @c.rur_pred_mutualin_nbrs(i)
         when :mutualin_abs then @c.rur_pred_mutualin_abs(i)
+        when :mutualin_wnbrs then @c.rur_pred_mutualin_wnbrs(i)
         else raise ArgumentException "Unknown Parameter"
         end
                 
       rec_no, rec_correct, unr_no, unr_correct, e, e_inv = 0, 0, 0, 0, 0.0, 0.0
       
+      ehash = Hash.new({})
+      
       # Choose what kind of prediction heuristic to use
       edge_block = case parameter
-      when :degree, :inmsg, :outmsg, :msgdeg
+      when :degree, :inmsg, :outmsg, :msgdeg, :inoutdeg
         Proc.new do |e1,e2,type|
           ratio = (degrees[e1] && degrees[e2]) ? degrees[e1]/degrees[e2] : 0
           # For each edge, predict reciprocity, recino += 1
           # If the edge was reciprocated, correct += 1
           if e <= ratio && ratio <= e_inv
-            rec_no += 1
-            rec_correct += 1 if type == 2
-          else
-            unr_no += 1
-            unr_correct += 1 if type == 1
-          end
-        end
-      when :inoutdeg
-        Proc.new do |e1,e2,type|
-          # TODO How about if degrees[e1/e2] == 1, then should predict unrecip!
-          # TODO Alternatively, do average of e1 and e2? Or max?
-          if 1.0 - degrees[e1] * degrees[e2] >= e
             rec_no += 1
             rec_correct += 1 if type == 2
           else
@@ -224,6 +235,26 @@ class AtMessages2
         Proc.new do |e1,e2,type|
           num_mutual = (para2[e1] && para2[e2]) ? (para2[e1] & para2[e2]).size : 0
           if num_mutual >= e * 100
+            rec_no += 1
+            rec_correct += 1 if type == 2
+          else
+            unr_no += 1
+            unr_correct += 1 if type == 1
+          end
+        end
+      when :mutualin_wnbrs
+        Proc.new do |e1,e2,type|
+          #puts "Testing %d against %d" % [e1,e2]
+          mutual = (para2[e1] ? para2[e1] : []) & (para2[e2] ? para2[e2] : [])
+          # Use cached values if they exist
+          score = if ehash[e1][e2]
+            ehash[e1][e2]
+          else
+            s = 0.0
+            mutual.each { |m| s += 1.0 / Math.log(degrees[m]) if degrees[m] }
+            ehash[e1][e2] = s
+          end
+          if score >= e * 100
             rec_no += 1
             rec_correct += 1 if type == 2
           else
@@ -277,6 +308,7 @@ class AtMessages2
         when :mutualin then @c.rur_pred_mutualin_image(i)
         when :mutualin_nbrs then @c.rur_pred_mutualin_nbrs_image(i)
         when :mutualin_abs then @c.rur_pred_mutualin_abs_image(i)
+        when :mutualin_wnbrs then @c.rur_pred_mutualin_wnbrs_image(i)
         else raise ArgumentException "Unknown Parameter"
         end
       
@@ -293,6 +325,7 @@ class AtMessages2
       when :mutualin then @c.rur_pred_mutualin &things_to_do
       when :mutualin_nbrs then @c.rur_pred_mutualin_nbrs &things_to_do
       when :mutualin_abs then @c.rur_pred_mutualin_abs &things_to_do
+      when :mutualin_wnbrs then @c.rur_pred_mutualin_wnbrs &things_to_do
       else raise ArgumentException "Unknown Parameter"
       end
   end

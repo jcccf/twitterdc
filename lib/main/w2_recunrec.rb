@@ -61,10 +61,10 @@ when 36
   puts "Building the Edge Prediction Plots using In Messages/In Degree"
   am.build_rur_prediction_plot(:msgdeg)
 when 37
-  puts "Predicting Edges in the Graph using In Degree/Out Degree Ratio Probability Thing"
+  puts "Predicting Edges in the Graph using Outdegree/Indegree Ratio"
   am.build_rur_prediction(:inoutdeg)
 when 38
-  puts "Building the Edge Prediction Plots using In Degree/Out Degree Ratio Probability Thing"
+  puts "Building the Edge Prediction Plots using Outdegree/Indegree Ratio"
   am.build_rur_prediction_plot(:inoutdeg)
 when 40
   puts "Predicting Edges in the Graph using Mutual Sends / Outdegree"
@@ -90,7 +90,19 @@ when 46
 when 47
   puts "Building the Edge Prediction Plots using Mutual Receives"
   am.build_rur_prediction_plot(:mutualin_abs)
+when 48
+  puts "Predicting Edges in the Graph using Mutual Receives (Weighted)"
+  am.build_rur_prediction(:mutualin_wnbrs)
+when 49
+  puts "Building the Edge Prediction Plots using Mutual Receives (Weighted)"
+  am.build_rur_prediction_plot(:mutualin_wnbrs)
 when 50
+  puts "Predicting Edges in the Graph using In Degree"
+  am.build_rur_prediction(:degree)
+when 51
+  puts "Predicting Edges in the Graph using In Degree"
+  am.build_rur_prediction_plot(:degree)
+when 60
   puts "Building In/Out-degree Counts"
   am.build_degree_counts
 else

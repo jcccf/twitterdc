@@ -21,11 +21,11 @@ class AtMessages
     @k = k # Threshold value is k
     @k2 = k2 # Upper value of k to filter
     @source_filename = source_filename
-    @people_base = base_dir+"/atmsg_people.txt"
-    @people_filename = base_dir+"/atmsg_people_"+sprintf("%03d",@n)+".txt"
-    @people_deg_filename = base_dir+"/atmsg_people_"+sprintf("%03d",@n)+"_degree.txt"
-    @people_edge_filename = base_dir+"/atmsg_people_"+sprintf("%03d",@n)+"_edges.txt"
-    @graph_filename = base_dir+"/atmsg_graph_"+sprintf("%03d",@n)+".txt"
+    @people_base = base_dir+"/people.txt"
+    @people_filename = base_dir+"/people_"+sprintf("%03d",@n)+".txt"
+    @people_deg_filename = base_dir+"/people_"+sprintf("%03d",@n)+"_degree.txt"
+    @people_edge_filename = base_dir+"/people_"+sprintf("%03d",@n)+"_edges.txt"
+    @graph_filename = base_dir+"/"+sprintf("%03d",@n)+".txt"
     
     @people = {}
     @people_cache = {}
@@ -117,7 +117,7 @@ class AtMessages
     File.rename(@c.degrees+"~", @c.degrees)
     
     # Count in-degrees & loop through edges and count and write to file
-    puts "Writing undirected edges to file..."
+    puts "Writing directed edges to file..."
     File.open(@people_edge_filename+"~", "w") do |f|
       edges.each do |k,v|
         v.each do |k2|
