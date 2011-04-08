@@ -121,6 +121,11 @@ class AtMessages2
     end
   end
   
+  # Predict reciprocity
+  # Output in the form "a b c d e f" lines
+  # a is the threshold value, b is the number of predictions of reciprocated edges
+  # c is the number of correct predictions of reciprocated edges, e & f are the same
+  # for unreciprocated edges, f is the total number of edges
   def build_rur_preds(parameter=:degree)
     @c.unreciprocated do |i,unr_filename|
       edges = read_rur_edges(unr_filename, @c.reciprocated_norep(i))
@@ -130,153 +135,12 @@ class AtMessages2
       when :outmsg then ReciprocityHeuristics::Outmessages.new(i,@c,edges)
       when :msgdeg then ReciprocityHeuristics::MessagesPerDegree.new(i,@c,edges)
       when :inoutdeg then ReciprocityHeuristics::OutdegreePerIndegree.new(i,@c,edges)
+      when :mutualin_nbrs then ReciprocityHeuristics::MutualInJaccard.new(i,@c,edges)
+      when :mutualin_abs then ReciprocityHeuristics::MutualInAbsolute.new(i,@c,edges)
+      when :mutualin_wnbrs then ReciprocityHeuristics::MutualInAdamic.new(i,@c,edges)
       else raise ArgumentError, "Invalid parameter supplied to build_rur_preds"
       end
       d.output
-    end
-  end
-  
-  # Predict reciprocity
-  # Output in the form "a b c d e f" lines
-  # a is the threshold value, b is the number of predictions of reciprocated edges
-  # c is the number of correct predictions of reciprocated edges, e & f are the same
-  # for unreciprocated edges, f is the total number of edges
-  def build_rur_prediction(parameter=:degree)
-    @c.unreciprocated do |i,unr_filename|
-      
-      # Read in edges
-      edges = read_rur_edges(unr_filename, @c.reciprocated_norep(i))
-      #puts edges.inspect
-    
-      # Read in degree counts
-      degrees = case parameter
-      when :degree then Processor.to_hash_float(@c.degrees)
-      when :inmsg then Processor.to_hash_float(@c.people_msg, 0, 1)
-      when :outmsg then Processor.to_hash_float(@c.people_msg, 0, 2)
-      when :msgdeg then
-        msgs = Processor.to_hash_float(@c.people_msg, 0, 1)
-        degs = Processor.to_hash_float(@c.degrees)
-        degs.merge(msgs){ |k,deg,msg| msg/deg }
-      when :inoutdeg then
-        Processor.to_hash_float_block(@c.degrees, 0, 1, 2) { |indeg,outdeg| outdeg/indeg }
-      when :mutual then
-        Processor.to_hash_float(@c.degrees, 0, 2) # Get outdegrees
-      when :mutualin, :mutualin_nbrs, :mutualin_abs, :mutualin_wnbrs then
-        Processor.to_hash_float(@c.degrees) # Get indegrees
-      else raise ArgumentException "Unknown Parameter"
-      end
-      
-      # Read in second parameter if required
-      para2 = case parameter
-      when :mutual then
-        Processor.to_hash_array(@c.edges)
-      when :mutualin, :mutualin_nbrs, :mutualin_abs, :mutualin_wnbrs then
-        Processor.to_hash_array(@c.edges, 1, 0) # Reverse
-      end
-        
-      outfile = case parameter
-        when :degree then @c.rur_pred_degree(i)
-        when :inmsg then @c.rur_pred_inmsg(i)
-        when :outmsg then @c.rur_pred_outmsg(i)
-        when :msgdeg then @c.rur_pred_msgdeg(i)
-        when :inoutdeg then @c.rur_pred_inoutdeg(i)
-        when :mutual then @c.rur_pred_mutual(i)
-        when :mutualin then @c.rur_pred_mutualin(i)
-        when :mutualin_nbrs then @c.rur_pred_mutualin_nbrs(i)
-        when :mutualin_abs then @c.rur_pred_mutualin_abs(i)
-        when :mutualin_wnbrs then @c.rur_pred_mutualin_wnbrs(i)
-        else raise ArgumentException "Unknown Parameter"
-        end
-                
-      rec_no, rec_correct, unr_no, unr_correct, e, e_inv = 0, 0, 0, 0, 0.0, 0.0
-      
-      ehash = Hash.new({})
-      
-      # Choose what kind of prediction heuristic to use
-      edge_block = case parameter
-      when :degree, :inmsg, :outmsg, :msgdeg, :inoutdeg
-        Proc.new do |e1,e2,type|
-          ratio = (degrees[e1] && degrees[e2]) ? degrees[e1]/degrees[e2] : 0
-          # For each edge, predict reciprocity, recino += 1
-          # If the edge was reciprocated, correct += 1
-          if e <= ratio && ratio <= e_inv
-            rec_no += 1
-            rec_correct += 1 if type == 2
-          else
-            unr_no += 1
-            unr_correct += 1 if type == 1
-          end
-        end
-      when :mutual, :mutualin
-        Proc.new do |e1,e2,type|
-          num_mutual = (para2[e1] && para2[e2]) ? 2*(para2[e1] & para2[e2]).size : 0
-          total_deg = [degrees[e1] + degrees[e2] - 2.0, 0.0].max
-          if total_deg == 0 || num_mutual / total_deg >= e
-            rec_no += 1
-            rec_correct += 1 if type == 2
-          else
-            unr_no += 1
-            unr_correct += 1 if type == 1
-          end
-        end
-      when :mutualin_nbrs
-        Proc.new do |e1,e2,type|
-          num_mutual = (para2[e1] && para2[e2]) ? (para2[e1] & para2[e2]).size : 0
-          total_nbrs = ((para2[e1] ? para2[e1] : []) | (para2[e2] ? para2[e2] : [])).size
-          if total_nbrs == 0 || (num_mutual / (total_nbrs-0.0)) >= e
-            rec_no += 1
-            rec_correct += 1 if type == 2
-          else
-            unr_no += 1
-            unr_correct += 1 if type == 1
-          end
-        end
-      when :mutualin_abs
-        Proc.new do |e1,e2,type|
-          num_mutual = (para2[e1] && para2[e2]) ? (para2[e1] & para2[e2]).size : 0
-          if num_mutual >= e * 100
-            rec_no += 1
-            rec_correct += 1 if type == 2
-          else
-            unr_no += 1
-            unr_correct += 1 if type == 1
-          end
-        end
-      when :mutualin_wnbrs
-        Proc.new do |e1,e2,type|
-          #puts "Testing %d against %d" % [e1,e2]
-          mutual = (para2[e1] ? para2[e1] : []) & (para2[e2] ? para2[e2] : [])
-          # Use cached values if they exist
-          score = if ehash[e1][e2]
-            ehash[e1][e2]
-          else
-            s = 0.0
-            mutual.each { |m| s += 1.0 / Math.log(degrees[m]) if degrees[m] }
-            ehash[e1][e2] = s
-          end
-          if score >= e * 100
-            rec_no += 1
-            rec_correct += 1 if type == 2
-          else
-            unr_no += 1
-            unr_correct += 1 if type == 1
-          end
-        end
-      end
-        
-      puts "Calculating Predictions"
-      File.open(outfile+"~","w") do |f|
-        # Step through each threshold
-        @c.range_array.each do |j|
-          e = j / 100.0
-          e_inv = 1 / e
-          rec_no, rec_correct, unr_no, unr_correct = 0, 0, 0, 0
-          edges.each &edge_block
-          f.puts "#{j} #{rec_no} #{rec_correct} #{unr_no} #{unr_correct} #{edges.count}"
-        end
-      end
-      File.rename(outfile+"~",outfile)
-    
     end
   end
   
