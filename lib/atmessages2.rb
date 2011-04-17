@@ -1,12 +1,7 @@
 require 'set'
 require 'stringio'
-require_relative 'forestlib/adj_graph'
-require_relative 'forestlib/plotter'
-require_relative 'forestlib/counter'
-require_relative 'forestlib/processor'
-require_relative 'forestlib/disjoint_set'
-require_relative 'twitterdc/constants'
-require_relative 'twitterdc/reciprocity_heuristics'
+require_relative 'forestlib/forestlib'
+require_relative 'twitterdc/twitterdc'
 include ForestLib
 include TwitterDc
 
@@ -126,72 +121,80 @@ class AtMessages2
   # a is the threshold value, b is the number of predictions of reciprocated edges
   # c is the number of correct predictions of reciprocated edges, e & f are the same
   # for unreciprocated edges, f is the total number of edges
-  def build_rur_preds(parameter=:degree)
-    @c.unreciprocated do |i,unr_filename|
-      edges = read_rur_edges(unr_filename, @c.reciprocated_norep(i))
-      d = case parameter
-      when :degree then ReciprocityHeuristics::Indegree.new(i,@c,edges)
-      when :inmsg then ReciprocityHeuristics::Inmessages.new(i,@c,edges)
-      when :outmsg then ReciprocityHeuristics::Outmessages.new(i,@c,edges)
-      when :msgdeg then ReciprocityHeuristics::MessagesPerDegree.new(i,@c,edges)
-      when :inoutdeg then ReciprocityHeuristics::OutdegreePerIndegree.new(i,@c,edges)
-      when :mutualin_nbrs then ReciprocityHeuristics::MutualInJaccard.new(i,@c,edges)
-      when :mutualin_abs then ReciprocityHeuristics::MutualInAbsolute.new(i,@c,edges)
-      when :mutualin_wnbrs then ReciprocityHeuristics::MutualInAdamic.new(i,@c,edges)
-      else raise ArgumentError, "Invalid parameter supplied to build_rur_preds"
-      end
-      d.output
+  def build_rur_prediction(parameter=:degree)
+    d = case parameter
+    when :degree then ReciprocityHeuristics::Indegree.new(@c)
+    when :inmsg then ReciprocityHeuristics::Inmessages.new(@c)
+    when :outmsg then ReciprocityHeuristics::Outmessages.new(@c)
+    when :msgdeg then ReciprocityHeuristics::MessagesPerDegree.new(@c)
+    when :inoutdeg then ReciprocityHeuristics::OutdegreePerIndegree.new(@c)
+    when :mutualin_nbrs then ReciprocityHeuristics::MutualInJaccard.new(@c)
+    when :mutualin_abs then ReciprocityHeuristics::MutualInAbsolute.new(@c)
+    when :mutualin_wnbrs then ReciprocityHeuristics::MutualInAdamic.new(@c)
+    when :katz then ReciprocityHeuristics::KatzNStep.new(@c)
+    when :katzout then ReciprocityHeuristics::KatzNStep.new(@c,:out)
+    when :katzinout then ReciprocityHeuristics::KatzNStep.new(@c,:inout)
+    when :katz0005 then ReciprocityHeuristics::KatzNStep.new(@c,:in,2,0.005)
+    when :katz01 then ReciprocityHeuristics::KatzNStep.new(@c,:in,2,0.1)
+    when :pagerank then ReciprocityHeuristics::RootedPagerank.new(@c)
+    when :pagerankout then ReciprocityHeuristics::RootedPagerank.new(@c,:out)
+    else raise ArgumentError, "Invalid parameter supplied to build_rur_preds"
     end
+    d.output
   end
   
   def build_rur_prediction_plot(parameter=:degree)
-    things_to_do = Proc.new do |i,filename|
-      x, y1, y2, y3, y4, y5 = [], [], [], [], [], []
+    constants = case parameter
+    when :degree then ReciprocityHeuristics::Indegree.constants(@c)
+    when :inmsg then ReciprocityHeuristics::Inmessages.constants(@c)
+    when :outmsg then ReciprocityHeuristics::Outmessages.constants(@c)
+    when :msgdeg then ReciprocityHeuristics::MessagesPerDegree.constants(@c)
+    when :inoutdeg then ReciprocityHeuristics::OutdegreePerIndegree.constants(@c)
+    when :mutualin_nbrs then ReciprocityHeuristics::MutualInJaccard.constants(@c)
+    when :mutualin_abs then ReciprocityHeuristics::MutualInAbsolute.constants(@c)
+    when :mutualin_wnbrs then ReciprocityHeuristics::MutualInAdamic.constants(@c)
+    when :katz then ReciprocityHeuristics::KatzNStep.constants(@c)
+    when :katzout then ReciprocityHeuristics::KatzNStep.constants(@c,:out)
+    when :katzinout then ReciprocityHeuristics::KatzNStep.constants(@c,:inout)
+    when :katz0005 then ReciprocityHeuristics::KatzNStep.constants(@c,:in,2,0.005)
+    when :pagerank then ReciprocityHeuristics::RootedPagerank.constants(@c)
+    when :pagerankout then ReciprocityHeuristics::RootedPagerank.constants(@c,:out)
+    else raise ArgumentError, "Invalid parameter supplied to build_rur_prediction_plot"
+    end
+
+    constants.filename_block do |i,filename|
+      x1, x2, x3, y1, y2, y3, y4, y5 = [], [], [], [], [], [], [], []
       File.open(filename, "r").each do |l|
         p = l.split.map!{|v| v.to_f}
-        x << p[0]/100.0
-        y1 << p[2]/p[1]
-        y2 << p[1]/p[5]
-        y3 << p[4]/p[3]
-        y4 << p[3]/p[5]
-        y5 << (p[2]+p[4])/p[5]
+        if p[1] > 0
+          x1 << p[0]/100.0
+          y1 << p[2]/p[1]
+        end
+        if p[5] > 0
+          x2 << p[0]/100.0
+          y2 << p[1]/p[5]
+          y4 << p[3]/p[5]
+          y5 << (p[2]+p[4])/p[5]
+        end
+        if p[3] > 0
+          y3 << p[4]/p[3]
+          x3 << p[0]/100.0
+        end
+
       end
       
       #titles = ["Correctly Guessed Reciprocated/Guessed Reciprocated", "Guessed Reciprocated/Total", "Correctly Guessed Unreciprocated/Guessed Unreciprocated","Guessed Unreciprocated/Total", "Correct Guesses/Total"]
       titles = ["(E_k^r & F_theta) / F_t", "F_t/Total", "(E_k^u & F_t`) / F_t`", "F_t` / Total", "(E_k^r & F_t + E_k^u & F_t`) / Total"]
-      xpN = [x, x, x, x, x]
+      xpN = [x1, x2, x3, x2, x2]
       ypN = [y1, y2, y3, y4, y5]
+      max_accuracy_y, max_index = y5.each_with_index.max
+      max_accuracy_x = x2[max_index]
       
-      imagefile = case parameter
-        when :degree then @c.rur_pred_degree_image(i)
-        when :inmsg then @c.rur_pred_inmsg_image(i)
-        when :outmsg then @c.rur_pred_outmsg_image(i)
-        when :msgdeg then @c.rur_pred_msgdeg_image(i)
-        when :inoutdeg then @c.rur_pred_inoutdeg_image(i)
-        when :mutual then @c.rur_pred_mutual_image(i)
-        when :mutualin then @c.rur_pred_mutualin_image(i)
-        when :mutualin_nbrs then @c.rur_pred_mutualin_nbrs_image(i)
-        when :mutualin_abs then @c.rur_pred_mutualin_abs_image(i)
-        when :mutualin_wnbrs then @c.rur_pred_mutualin_wnbrs_image(i)
-        else raise ArgumentException "Unknown Parameter"
-        end
+      imagefile = constants.image_filename(i)
       
-      Plotter.plotN("Accuracy of Degree Prediction","Threshold (theta)","Accuracy",titles,xpN,ypN,imagefile)
+      Plotter.plotN("Accuracy of Prediction (Max at %.3f,%f)" % [max_accuracy_x,max_accuracy_y],"Threshold (theta)","Accuracy",titles,xpN,ypN,imagefile)
     end
     
-    files = case parameter
-      when :degree then @c.rur_pred_degree &things_to_do
-      when :inmsg then @c.rur_pred_inmsg &things_to_do
-      when :outmsg then @c.rur_pred_outmsg &things_to_do
-      when :msgdeg then @c.rur_pred_msgdeg &things_to_do
-      when :inoutdeg then @c.rur_pred_inoutdeg &things_to_do
-      when :mutual then @c.rur_pred_mutual &things_to_do
-      when :mutualin then @c.rur_pred_mutualin &things_to_do
-      when :mutualin_nbrs then @c.rur_pred_mutualin_nbrs &things_to_do
-      when :mutualin_abs then @c.rur_pred_mutualin_abs &things_to_do
-      when :mutualin_wnbrs then @c.rur_pred_mutualin_wnbrs &things_to_do
-      else raise ArgumentException "Unknown Parameter"
-      end
   end
   
   # Rebuild correct graphs for reciprocated subgraphs
@@ -271,43 +274,6 @@ class AtMessages2
       end
     end
     File.rename(@c.people_msg+"~",@c.people_msg)
-  end
-  
-  # Read in reciprocated and unreciprocated edges and create a combined edge list with
-  # equal proportions of reciprocated and unreciprocated edges by choosing a random number
-  # of edges from the reciprocated graph equal to the number of edges in the unreciprocated
-  # graph.
-  def read_rur_edges(unr_filename, rec_filename)
-    
-    dupchecker = Set.new
-    
-    # Read in Unreciprocated Edges
-    puts "Reading in Unreciprocated Edges"
-    edges = []
-    File.open(unr_filename,"r").each do |l|
-      e1, e2 = l.split.map!{|v| v.to_i }
-      e1, e2 = e2, e1 if e1 > e2
-      raise RuntimeError "Not supposed to exist" if dupchecker.include? [e1,e2]
-      dupchecker.add [e1, e2]
-      edges << [e1, e2, 1]
-    end
-    
-    # Read in Reciprocated Edges
-    puts "Reading in Reciprocated Edges"
-    tmp_edges = []
-    File.open(rec_filename,"r").each do |l|
-      e1, e2 = l.split.map!{|v| v.to_i }
-      e1, e2 = e2, e1 if e1 > e2
-      raise RuntimeError "Not supposed to exist" if dupchecker.include? [e1,e2]
-      dupchecker.add [e1, e2]
-      tmp_edges << [e1, e2, 2]     
-    end
-    
-    # Take N random entries from the reciprocated edge list 
-    # where N = # of unreciprocated edges
-    edges = edges | (tmp_edges.sort_by{rand}[0..(edges.count-1)])
-    
-    edges
   end
   
 end

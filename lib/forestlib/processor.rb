@@ -28,16 +28,31 @@ module ForestLib
     end
     
     # Converts "a b" on each line into "a => [b1,...,bn]" mappings
-    def self.to_hash_array(input_file, index_1 = 0, index_2 = 1)
+    # If directed is set to false, then mappings are "a => [b1,...,bn]" and "b => [a1,...,an]"
+    def self.to_hash_array(input_file, index_1 = 0, index_2 = 1, directed = true)
       self.validate(input_file)
       maxsplit = [index_1, index_2].max + 1
       h = {}
-      File.open(input_file,"r").each do |l|
-        parts = l.split(" ", maxsplit)
-        i1, i2 = parts[index_1].to_i, parts[index_2].to_i
-        h[i1] ||= []
-        h[i1] << i2
+      if directed
+        File.open(input_file,"r").each do |l|
+          parts = l.split(" ", maxsplit)
+          i1, i2 = parts[index_1].to_i, parts[index_2].to_i
+          h[i1] ||= []
+          h[i1] << i2
+        end
+      else
+        File.open(input_file,"r").each do |l|
+          parts = l.split(" ", maxsplit)
+          i1, i2 = parts[index_1].to_i, parts[index_2].to_i
+          h[i1] ||= []
+          h[i2] ||= []
+          if !h[i1].include? i2 # Don't add (a,b) and then (b,a)
+            h[i1] << i2
+            h[i2] << i1
+          end
+        end
       end
+      #puts h.inspect
       h
     end
     

@@ -76,18 +76,18 @@ class TestAtMessages2 < Test::Unit::TestCase
     @atm.build_graph
     @at2.build_rur_outdegrees
     @atm.find_degrees_edges
-    @at2.build_rur_prediction
+    #@at2.build_rur_prediction
     
     @at2.build_message_count
-    # @at2.build_rur_prediction(:inmsg)
-    # @at2.build_rur_prediction(:msgdeg)
-    # @at2.build_rur_prediction(:inoutdeg)
-    # @at2.build_rur_prediction(:mutual)
-    # @at2.build_rur_prediction(:mutualin_nbrs)
-    # @at2.build_rur_prediction(:mutualin_abs)
+    @at2.build_rur_prediction(:inmsg)
+    @at2.build_rur_prediction(:msgdeg)
+    @at2.build_rur_prediction(:inoutdeg)
+    @at2.build_rur_prediction(:mutualin_nbrs)
+    @at2.build_rur_prediction(:mutualin_abs)
     # puts "WNbrs"
     # @at2.build_rur_prediction(:mutualin_wnbrs)
-    @at2.build_rur_preds(:inoutdeg)
+    @at2.build_rur_prediction(:pagerank)
+    #@at2.build_rur_preds(:pagerank)
     
     @at3.generate_csv_files(3)
     @at3.decision_tree_generate(3)

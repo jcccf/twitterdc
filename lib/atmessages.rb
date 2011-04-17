@@ -262,8 +262,8 @@ class AtMessages
           @people.each do |k,v|
             v.each do |k2,v2|
               if v2 >= i
-                if @people.include? k2
-                  if @people[k2].include? k
+                #if @people.include? k2 # Don't care, since k2 has >= n messages sent, even if k2 sends none to this set
+                  if @people[k2] && (@people[k2].include? k)
                     if @people[k2][k] >= i
                       s.puts "#{k} #{k2}" 
                       @people_cache[k] ||= {}
@@ -274,9 +274,11 @@ class AtMessages
                     @people_cache[k] ||= {}
                     @people_cache[k][k2] = [v2, 0]
                   end
-                else
-                  raise RuntimeError "@people must include #{k2}"
-                end
+                #else
+                  #puts "#{k2} not included in @people but #{k} sent #{v2} messages"
+                  #raise RuntimeException, "@people must include #{k2}"
+                #end
+                puts "#{k2} not included in @people but #{k} sent #{v2} messages" unless @people[k2]
               end
             end
           end

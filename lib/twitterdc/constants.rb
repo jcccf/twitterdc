@@ -30,6 +30,7 @@ module TwitterDc
           yield i, filename
         end
       else
+        eye = eye.join("_") if eye.respond_to?('join')
         sprintf("%s/%03d_%03d_%s.%s", folder, @n, eye, suffix, extension)
       end
     end
@@ -103,103 +104,6 @@ module TwitterDc
       base_n_k("rur_outdegrees_ratio",eye, true, &block)
     end
     
-    # Prediction based on degree
-    def rur_pred_degree(eye=@k, &block)
-      base_n_k("rur_pred",eye, &block)
-    end
-    
-    def rur_pred_degree_image(eye=@k, &block)
-      base_n_k("rur_pred",eye, true, &block)
-    end
-    
-    # Prediction based on in-messages
-    def rur_pred_inmsg(eye=@k, &block)
-      base_n_k("rur_pred_inmsg",eye, &block)
-    end
-    
-    def rur_pred_inmsg_image(eye=@k, &block)
-      base_n_k("rur_pred_inmsg",eye, true, &block)
-    end
-    
-    # Prediction based on out-messages
-    def rur_pred_outmsg(eye=@k, &block)
-      base_n_k("rur_pred_outmsg",eye, &block)
-    end
-    
-    def rur_pred_outmsg_image(eye=@k, &block)
-      base_n_k("rur_pred_outmsg",eye, true, &block)
-    end
-    
-    # Prediction based on in-messages / in-degree
-    def rur_pred_msgdeg(eye=@k, &block)
-      base_n_k("rur_pred_msgdeg",eye, &block)
-    end
-    
-    # Image of prediction based on in-messages / in-degree
-    def rur_pred_msgdeg_image(eye=@k, &block)
-      base_n_k("rur_pred_msgdeg",eye, true, &block)
-    end
-    
-    # Prediction based on ratio of indegree to outdegree
-    def rur_pred_inoutdeg(eye=@k, &block)
-      base_n_k("rur_pred_inoutdeg",eye, &block)
-    end
-    
-    # Image of prediction based on ratio of indegree to outdegree
-    def rur_pred_inoutdeg_image(eye=@k, &block)
-      base_n_k("rur_pred_inoutdeg",eye, true, &block)
-    end
-    
-    # Prediction based on number of mutual friends
-    def rur_pred_mutual(eye=@k, &block)
-      base_n_k("rur_pred_mutual",eye, &block)
-    end
-    
-    # Image of prediction based on number of mutual friends
-    def rur_pred_mutual_image(eye=@k, &block)
-      base_n_k("rur_pred_mutual",eye, true, &block)
-    end
-    
-    # Prediction based on number of mutual friends (indegree)
-    def rur_pred_mutualin(eye=@k, &block)
-      base_n_k("rur_pred_mutualin",eye, &block)
-    end
-    
-    # Image of prediction based on number of mutual friends (indegree)
-    def rur_pred_mutualin_image(eye=@k, &block)
-      base_n_k("rur_pred_mutualin",eye, true, &block)
-    end
-    
-    # Prediction based on number of mutual friends (indegree) (Jaccard's Coefficient)
-    def rur_pred_mutualin_nbrs(eye=@k, &block)
-      base_n_k("rur_pred_mutualin_nbrs",eye, &block)
-    end
-    
-    # Image of prediction based on number of mutual friends (indegree) (Jaccard's Coefficient)
-    def rur_pred_mutualin_nbrs_image(eye=@k, &block)
-      base_n_k("rur_pred_mutualin_nbrs",eye, true, &block)
-    end
-    
-    # Prediction based on number of mutual friends (indegree) (Absolute number of mutual friends)
-    def rur_pred_mutualin_abs(eye=@k, &block)
-      base_n_k("rur_pred_mutualin_abs",eye, &block)
-    end
-    
-    # Image of prediction based on number of mutual friends (indegree) (Absolute number of mutual friends)
-    def rur_pred_mutualin_abs_image(eye=@k, &block)
-      base_n_k("rur_pred_mutualin_abs",eye, true, &block)
-    end
-    
-    # Prediction based on number of mutual friends (indegree) (Adamic/Adar)
-    def rur_pred_mutualin_wnbrs(eye=@k, &block)
-      base_n_k("rur_pred_mutualin_wnbrs",eye, &block)
-    end
-    
-    # Image of prediction based on number of mutual friends (indegree) (Adamic/Adar)
-    def rur_pred_mutualin_wnbrs_image(eye=@k, &block)
-      base_n_k("rur_pred_mutualin_wnbrs",eye, true, &block)
-    end
-    
     # Unreciprocated Graph File
     def unreciprocated(eye=@k, &block)
       base_n_k("unr",eye, &block)
@@ -245,30 +149,6 @@ module TwitterDc
     
     def degrees
       @base+"/people_"+sprintf("%03d",@n)+"_degree.txt"
-    end
-    
-    #
-    # Decision Tree Constants
-    #
-    
-    def csv_training(eye=@k, &block)
-      base_n_k("csv_training",eye, &block)
-    end
-    
-    def csv_test(eye=@k, &block)
-      base_n_k("csv_test",eye, &block)
-    end
-    
-    def decision_rules(eye=@k, &block)
-      base_n_k("decision_rules",eye, &block)
-    end
-    
-    def decision_results(eye=@k, &block)
-      base_n_k("decision_results",eye, &block)
-    end
-    
-    def decision_results_bon(i, eye=@k, &block)
-      base_n_k("decision_results_basedon_"+i.to_s, eye, &block)
     end
     
   end

@@ -18,9 +18,9 @@ puts "For #{n}, #{k} to #{k2}, with THETA = #{e1} to #{e2} in increments of #{st
 case stage
 when 1
   puts "Finding Users with > #{n} messages..."
-  atm.filter_users_by_messages
+  am.filter_users_by_messages
   puts "Finding Edges for #{n}..."
-  atm.filter_graph_by_users
+  am.filter_graph_by_users
 when 2
   puts "Building Graph and separating..."
   am.build_graph

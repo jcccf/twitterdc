@@ -102,7 +102,44 @@ when 50
 when 51
   puts "Predicting Edges in the Graph using In Degree"
   am.build_rur_prediction_plot(:degree)
+when 52
+  puts "Predicting Edges in the Graph using Katz"
+  am.build_rur_prediction(:katz)
+when 53
+  puts "Predicting Edges in the Graph using Katz"
+  am.build_rur_prediction_plot(:katz)
+when 54
+  puts "Predicting Edges in the Graph using Rooted Unweighted Pagerank (Out)"
+  am.build_rur_prediction(:pagerankout)
+when 55
+  puts "Predicting Edges in the Graph using Rooted Unweighted Pagerank (Out)"
+  am.build_rur_prediction_plot(:pagerankout)
+when 56
+  puts "Predicting Edges in the Graph using Katz (Undirected)"
+  am.build_rur_prediction(:katzinout)
+when 57
+  puts "Predicting Edges in the Graph using Katz (Undirected)"
+  am.build_rur_prediction_plot(:katzinout)
+when 58
+  puts "Predicting Edges in the Graph using Katz Out"
+  am.build_rur_prediction(:katzout)
+when 59
+  puts "Predicting Edges in the Graph using Katz Out"
+  am.build_rur_prediction_plot(:katzout)
 when 60
+  puts "Predicting Edges in the Graph using Katz 0.0005"
+  am.build_rur_prediction(:katz0005)  
+when 61
+  puts "Predicting Edges in the Graph using Katz 0.0005"
+  am.build_rur_prediction_plot(:katz0005)
+when 62
+  puts "Predicting Edges in the Graph using Katz 0.1"
+  am.build_rur_prediction(:katz01)  
+when 63
+  puts "Predicting Edges in the Graph using Katz 0.1"
+  am.build_rur_prediction_plot(:katz01)
+
+when 70
   puts "Building In/Out-degree Counts"
   am.build_degree_counts
 else
