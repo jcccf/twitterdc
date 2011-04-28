@@ -24,6 +24,9 @@ when 2
 when 3
   puts "Testing Generated Tree of #{k} on #{k2}"
   am.decision_tree_evaluate(k,k2)
+when 11
+  puts "Generating Simple CSV for #{k}"
+  am.generate_csv_files_for_simple(k)
 else
   puts "Error in Stage Selection!"
 end

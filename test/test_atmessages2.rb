@@ -87,9 +87,12 @@ class TestAtMessages2 < Test::Unit::TestCase
     # puts "WNbrs"
     # @at2.build_rur_prediction(:mutualin_wnbrs)
     @at2.build_rur_prediction(:pagerank)
+    @at2.build_rur_prediction(:prefattach)
+    @at2.build_rur_prediction(:prefattach,:percentiles)
     #@at2.build_rur_preds(:pagerank)
     
     @at3.generate_csv_files(3)
+    @at3.generate_csv_files_for_simple(3)
     @at3.decision_tree_generate(3)
     
     assert_file_equal("10 2 0 0\n14 2 0 0\n11 1 0 1\n13 2 0 1\n15 1 1 0\n16 0 1 0\n","data/003_003_rur_outdegrees.txt")

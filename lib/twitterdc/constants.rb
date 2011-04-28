@@ -20,6 +20,12 @@ module TwitterDc
       a
     end
     
+    def range_array_full
+      a = []
+      (e1..e2).each {|i| a << i}
+      a
+    end
+    
     # Base template for files that depend only on n and k
     def base_n_k(suffix, eye=@k, is_image=false)
       folder = is_image ? @base+"/images" : @base

@@ -121,7 +121,7 @@ class AtMessages2
   # a is the threshold value, b is the number of predictions of reciprocated edges
   # c is the number of correct predictions of reciprocated edges, e & f are the same
   # for unreciprocated edges, f is the total number of edges
-  def build_rur_prediction(parameter=:degree)
+  def build_rur_prediction(parameter=:degree, type=:absolute)
     d = case parameter
     when :degree then ReciprocityHeuristics::Indegree.new(@c)
     when :inmsg then ReciprocityHeuristics::Inmessages.new(@c)
@@ -138,12 +138,18 @@ class AtMessages2
     when :katz01 then ReciprocityHeuristics::KatzNStep.new(@c,:in,2,0.1)
     when :pagerank then ReciprocityHeuristics::RootedPagerank.new(@c)
     when :pagerankout then ReciprocityHeuristics::RootedPagerank.new(@c,:out)
-    else raise ArgumentError, "Invalid parameter supplied to build_rur_preds"
+    when :prefattach then ReciprocityHeuristics::PreferentialAttachment.new(@c)
+    else raise ArgumentError, "Invalid parameter argument supplied to build_rur_preds"
     end
-    d.output
+    
+    case type
+    when :absolute then d.output
+    when :percentiles then d.output_percentiles
+    else raise ArgumentError, "Invalid type argument supplied to build_rur_preds"
+    end
   end
   
-  def build_rur_prediction_plot(parameter=:degree)
+  def build_rur_prediction_plot(parameter=:degree, type=:absolute)
     constants = case parameter
     when :degree then ReciprocityHeuristics::Indegree.constants(@c)
     when :inmsg then ReciprocityHeuristics::Inmessages.constants(@c)
@@ -157,12 +163,14 @@ class AtMessages2
     when :katzout then ReciprocityHeuristics::KatzNStep.constants(@c,:out)
     when :katzinout then ReciprocityHeuristics::KatzNStep.constants(@c,:inout)
     when :katz0005 then ReciprocityHeuristics::KatzNStep.constants(@c,:in,2,0.005)
+    when :katz01 then ReciprocityHeuristics::KatzNStep.constants(@c,:in,2,0.1)
     when :pagerank then ReciprocityHeuristics::RootedPagerank.constants(@c)
     when :pagerankout then ReciprocityHeuristics::RootedPagerank.constants(@c,:out)
+    when :prefattach then ReciprocityHeuristics::PreferentialAttachment.constants(@c)
     else raise ArgumentError, "Invalid parameter supplied to build_rur_prediction_plot"
     end
-
-    constants.filename_block do |i,filename|
+    
+    eblock = Proc.new do |i,filename|
       x1, x2, x3, y1, y2, y3, y4, y5 = [], [], [], [], [], [], [], []
       File.open(filename, "r").each do |l|
         p = l.split.map!{|v| v.to_f}
@@ -190,9 +198,19 @@ class AtMessages2
       max_accuracy_y, max_index = y5.each_with_index.max
       max_accuracy_x = x2[max_index]
       
-      imagefile = constants.image_filename(i)
+      imagefile = case type
+        when :absolute then constants.image_filename(i)
+        when :percentiles then constants.pimage_filename(i)
+        else raise ArgumentError, "Invalid imagefile parameter"
+        end
       
       Plotter.plotN("Accuracy of Prediction (Max at %.3f,%f)" % [max_accuracy_x,max_accuracy_y],"Threshold (theta)","Accuracy",titles,xpN,ypN,imagefile)
+    end
+    
+    case type
+    when :absolute then constants.filename_block &eblock
+    when :percentiles then constants.pfilename_block &eblock
+    else raise ArgumentError, "Invalid type argument supplied"
     end
     
   end

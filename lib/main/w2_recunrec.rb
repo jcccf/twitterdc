@@ -112,7 +112,7 @@ when 54
   puts "Predicting Edges in the Graph using Rooted Unweighted Pagerank (Out)"
   am.build_rur_prediction(:pagerankout)
 when 55
-  puts "Predicting Edges in the Graph using Rooted Unweighted Pagerank (Out)"
+  puts "Predicting Edges in the Graph using Rooted Unweighted Pagerank (Out) Plot"
   am.build_rur_prediction_plot(:pagerankout)
 when 56
   puts "Predicting Edges in the Graph using Katz (Undirected)"
@@ -138,8 +138,37 @@ when 62
 when 63
   puts "Predicting Edges in the Graph using Katz 0.1"
   am.build_rur_prediction_plot(:katz01)
-
+when 64
+  puts "Predicting Edges in the Graph using Preferential Attachment 0-1000"
+  am.build_rur_prediction(:prefattach)  
+when 65
+  puts "Predicting Edges in the Graph using Preferential Attachment 0-1000"
+  am.build_rur_prediction_plot(:prefattach)
+when 66
+  puts "Predicting Edges in the Graph using Preferential Attachment Percentiles"
+  am.build_rur_prediction(:prefattach,:percentiles)  
+when 67
+  puts "Predicting Edges in the Graph using Preferential Attachment Percentiles"
+  am.build_rur_prediction_plot(:prefattach,:percentiles)
+when 68
+  puts "Predicting Edges in the Graph using Katz Out Percentiles"
+  am.build_rur_prediction(:katzout,:percentiles)
+when 69
+  puts "Predicting Edges in the Graph using Katz Out Percentiles"
+  am.build_rur_prediction_plot(:katzout,:percentiles)
 when 70
+  puts "Predicting Edges in the Graph using Mutual Receives (Weighted) Percentiles"
+  am.build_rur_prediction(:mutualin_wnbrs,:percentiles)
+when 71
+  puts "Building the Edge Prediction Plots using Mutual Receives (Weighted) Percentiles"
+  am.build_rur_prediction_plot(:mutualin_wnbrs,:percentiles)
+when 72
+  puts "Predicting Edges in the Graph using Outdegree/Indegree Ratio Percentiles"
+  am.build_rur_prediction(:inoutdeg,:percentiles)
+when 73
+  puts "Building the Edge Prediction Plots using Outdegree/Indegree Ratio Percentiles"
+  am.build_rur_prediction_plot(:inoutdeg,:percentiles)
+when 80
   puts "Building In/Out-degree Counts"
   am.build_degree_counts
 else

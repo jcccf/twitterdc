@@ -27,6 +27,25 @@ module TwitterDc
           end
           i += 1
         end
+        #puts values
+        #puts @classified
+        self
+      end
+      
+      def percentiles100(name, values)
+        puts "Classifying %s into percentiles..." % name
+        sorted = values.sort{|a,b| a[1] <=> b[1]}
+        i, max, pct = 1, sorted.count.to_f, {}
+        c = 0
+        sorted.each do |k,v|
+          p = (i/max*100).ceil
+          @classified[k][name] = p
+          if c != p
+            @transitions[name][p] = v
+            c = p
+          end
+          i += 1
+        end
         puts values
         puts @classified
         self

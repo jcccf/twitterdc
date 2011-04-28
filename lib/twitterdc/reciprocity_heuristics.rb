@@ -1,5 +1,6 @@
 require_relative 'constants'
 require_relative 'constant'
+require_relative 'classifier'
 require_relative '../forestlib/processor'
 include TwitterDc
 include ForestLib
@@ -54,8 +55,6 @@ module TwitterDc
     module BaseHelpers
       def base_output &edge_block
         @c.unreciprocated do |i,unr_filename|
-          # Check if @outfile class variable is a method name (like for Indegree) 
-          # or a Proc (like for Katz)
           outfile = @constants.filename(i)
           edges = Helpers.read_rur_edges(unr_filename, @c.reciprocated_norep(i))
           File.open(outfile+"~","w") do |f|
@@ -65,6 +64,40 @@ module TwitterDc
               @e_inv = 1 / @e
               @rec_no, @rec_correct, @unr_no, @unr_correct = 0, 0, 0, 0
               edges.each &edge_block
+              f.puts "#{j} #{@rec_no} #{@rec_correct} #{@unr_no} #{@unr_correct} #{edges.count}"
+            end
+          end
+          File.rename(outfile+"~",outfile)
+        end
+      end
+      
+      def base_output_percentiles_100 &edge_block
+        @c.unreciprocated do |i,unr_filename|
+          outfile = @constants.pfilename(i)
+          edges = Helpers.read_rur_edges(unr_filename, @c.reciprocated_norep(i))
+          p = ReciprocityHeuristics::Classifier.new
+          edgevals = {}
+          edges.each do |e1,e2,type|
+            edgevals[[e1,e2]] = edge_block.call(e1,e2)
+          end
+          
+          p.percentiles100(:a, edgevals)
+          
+          File.open(outfile+"~","w") do |f|
+            # Step through each threshold
+            @c.range_array_full.each do |j|
+              @e = j
+              @rec_no, @rec_correct, @unr_no, @unr_correct = 0, 0, 0, 0
+              edges.each do |e1,e2,type|
+                val = p.classified[[e1,e2]][:a]
+                if val >= @e
+                  @rec_no += 1
+                  @rec_correct += 1 if type == 2
+                else
+                  @unr_no += 1
+                  @unr_correct += 1 if type == 1
+                end
+              end
               f.puts "#{j} #{@rec_no} #{@rec_correct} #{@unr_no} #{@unr_correct} #{edges.count}"
             end
           end
@@ -93,7 +126,8 @@ module TwitterDc
     class Base
       def initialize(c)
         @c = c
-        @cache = Hash.new({})
+        @cache = Hash.new {|h,k| h[k] = {}}
+        @pref_cache = Hash.new {|h,k| h[k] = {}}
       end
     end
     
@@ -182,6 +216,12 @@ module TwitterDc
       
       def self.constants(c)
         Constant.new(c, "inoutdeg")
+      end
+      
+      def output_percentiles
+        base_output_percentiles_100 do |e1,e2|
+          @outindeg[e1] / @outindeg[e2]
+        end
       end
       
       def output
@@ -282,6 +322,12 @@ module TwitterDc
         Constant.new(c, "adamic")
       end
       
+      def output_percentiles
+        base_output_percentiles_100 do |e1,e2|
+          weighted_score(e1,e2)
+        end
+      end
+      
       def output
         base_output do |e1,e2,type|
           #puts "Testing %d against %d" % [e1,e2]
@@ -358,6 +404,12 @@ module TwitterDc
       
       def self.constants(c, edge_type=:in, n=2, beta=0.05)
         Constant.new(c, "katz", [edge_type,n,beta])
+      end
+      
+      def output_percentiles
+        base_output_percentiles_100 do |e1,e2|
+          path_rec(0, [], e1,e2)
+        end
       end
       
       def output
@@ -454,7 +506,64 @@ module TwitterDc
       
     end
     
+    module PreferentialAttachmentHelpers
+      def preferential_attachment(e1, e2)
+        @degrees[e1] * @degrees[e2]
+      end
+    end
+    
+    class PreferentialAttachmentDecision
+      include PreferentialAttachmentHelpers
+      
+      def initialize(c, degrees)
+        @c = c
+        @degrees = degrees
+      end
+      
+      def result(e1,e2)
+        preferential_attachment(e1,e2)
+      end
+    end
+    
+    class PreferentialAttachment < Base
+      include BaseHelpers
+      include PreferentialAttachmentHelpers
+      
+      def initialize(c, edge_type=:in)
+        super(c)
+        @degrees = case edge_type
+        when :in then Processor.to_hash_float(@c.degrees)
+        when :out then Processor.to_hash_float(@c.degrees, 0, 2)
+        end
+        @constants = Constant.new(c, "prefattach", [edge_type])
+      end
+      
+      def self.constants(c, edge_type=:in)
+        Constant.new(c, "prefattach", [edge_type])
+      end
+      
+      def output_percentiles
+        base_output_percentiles_100 do |e1,e2|
+          preferential_attachment(e1,e2)
+        end
+      end
+      
+      def output
+        base_output do |e1,e2,type|
+          product = @cache[e1][e2]
+          product ||= (@cache[e1][e2] = preferential_attachment(e1,e2))
+          if product >= @e * 1000
+            @rec_no += 1
+            @rec_correct += 1 if type == 2
+          else
+            @unr_no += 1
+            @unr_correct += 1 if type == 1
+          end
+        end
+      end
+    end
+    
   end
 end
 
-c = ReciprocityHeuristics::RootedPagerank.constants(Constants.new("abc",500,10,30))
+#c = ReciprocityHeuristics::RootedPagerank.constants(Constants.new("abc",500,10,30))
