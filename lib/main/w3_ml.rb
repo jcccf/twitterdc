@@ -27,6 +27,9 @@ when 3
 when 11
   puts "Generating Simple CSV for #{k}"
   am.generate_csv_files_for_simple(k)
+when 12
+  puts "Generating Simple Decision Tree for #{k}"
+  am.decision_tree_generate_simple(k)
 else
   puts "Error in Stage Selection!"
 end

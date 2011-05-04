@@ -77,10 +77,10 @@ class AtMessages3
       mn = (num_mutual-0.0) / total_nbrs
       mutualin_nbrs_ratios[[e1,e2]] = mn > 1 ? 1.0/mn : mn
       
-      adamics[[e1,e2]] = p_adamic.result(e1,e2)
-      katz_paths[[e1,e2]] = p_katz.result(e1,e2)
+      adamics[[e1,e2]] = p_adamic.result(e1,e2,type)
+      katz_paths[[e1,e2]] = p_katz.result(e1,e2,type)
       
-      prefattaches[[e1,e2]] = p_pref.result(e1,e2)
+      prefattaches[[e1,e2]] = p_pref.result(e1,e2,type)
     end
     
     p_degrees = nil
@@ -197,6 +197,7 @@ class AtMessages3
     label_array << 'outindegree_ratio'
     label_array << 'inmsg_ratio'
     label_array << 'outmsg_ratio'
+    label_array << 'reciprocated'
     
     # Get edges and all reciprocated and unreciprocated edges
     puts "Getting ALL edges..."
@@ -348,6 +349,37 @@ class AtMessages3
       count += 1
     end
     File.open(Constant.new(@c,"decision_results").filename(i),"w") do |f|
+      f.puts "Accuracy: %d %d %.4f" % [correct, count, (correct-0.0)/count]
+      f.puts "Unmatched: "
+      unmatched.each { |u| f.puts u.inspect }
+    end
+  end
+  
+  # Generate decision tree rules using training data and test against test data
+  def decision_tree_generate_simple(i)
+    #Generate
+    puts "Generating rules based on training data..."
+    @dt = DecisionTree.new(Constant.new(@c,"csv_training_simple").filename(i))
+    File.open(Constant.new(@c,"decision_rules_simple").filename(i),"w") do |f|
+      f.puts @dt.get_rules
+    end
+    
+    # Test
+    puts "Testing data on generated rules..."
+    data = CSV.read(Constant.new(@c,"csv_test_simple").filename(i))
+    data.shift
+    correct, count, unmatched = 0, 0, []
+    data.each do |d|
+      puts d[0..-2].inspect
+      puts d[-1].inspect
+      begin
+        correct += 1 if @dt.eval(d[0..-2]) == d[-1]
+      rescue NameError
+        unmatched << d
+      end
+      count += 1
+    end
+    File.open(Constant.new(@c,"decision_results_simple").filename(i),"w") do |f|
       f.puts "Accuracy: %d %d %.4f" % [correct, count, (correct-0.0)/count]
       f.puts "Unmatched: "
       unmatched.each { |u| f.puts u.inspect }

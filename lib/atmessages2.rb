@@ -145,6 +145,7 @@ class AtMessages2
     case type
     when :absolute then d.output
     when :percentiles then d.output_percentiles
+    when :directed_percentiles then d.output_directed_percentiles
     else raise ArgumentError, "Invalid type argument supplied to build_rur_preds"
     end
   end
@@ -201,6 +202,7 @@ class AtMessages2
       imagefile = case type
         when :absolute then constants.image_filename(i)
         when :percentiles then constants.pimage_filename(i)
+        when :directed_percentiles then constants.dir_pimage_filename(i)
         else raise ArgumentError, "Invalid imagefile parameter"
         end
       
@@ -210,6 +212,7 @@ class AtMessages2
     case type
     when :absolute then constants.filename_block &eblock
     when :percentiles then constants.pfilename_block &eblock
+    when :directed_percentiles then constants.dir_pfilename_block &eblock
     else raise ArgumentError, "Invalid type argument supplied"
     end
     

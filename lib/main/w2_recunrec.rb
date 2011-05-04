@@ -168,7 +168,31 @@ when 72
 when 73
   puts "Building the Edge Prediction Plots using Outdegree/Indegree Ratio Percentiles"
   am.build_rur_prediction_plot(:inoutdeg,:percentiles)
+when 74
+  puts "Predicting Edges in the Graph using Katz In Percentiles"
+  am.build_rur_prediction(:katz,:percentiles)
+when 75
+  puts "Predicting Edges in the Graph using Katz In Percentiles"
+  am.build_rur_prediction_plot(:katz,:percentiles)
+when 76
+  puts "Predicting Edges in the Graph using Katz InOut Percentiles"
+  am.build_rur_prediction(:katzinout,:percentiles)
+when 77
+  puts "Predicting Edges in the Graph using Katz InOut Percentiles"
+  am.build_rur_prediction_plot(:katzinout,:percentiles)
 when 80
+  puts "Predicting Edges in the Graph using Outdegree/Indegree Ratio Pct"
+  am.build_rur_prediction(:inoutdeg,:percentiles)
+when 81
+  puts "Building the Edge Prediction Plots using Outdegree/Indegree Ratio Pct"
+  am.build_rur_prediction_plot(:inoutdeg,:percentiles)
+when 82
+  puts "Predicting Edges in the Graph using Outdegree/Indegree Ratio Directed Pct"
+  am.build_rur_prediction(:inoutdeg,:directed_percentiles)
+when 83
+  puts "Building the Edge Prediction Plots using Outdegree/Indegree Ratio Directed Pct"
+  am.build_rur_prediction_plot(:inoutdeg,:directed_percentiles)
+when 100
   puts "Building In/Out-degree Counts"
   am.build_degree_counts
 else

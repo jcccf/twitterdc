@@ -88,7 +88,9 @@ class TestAtMessages2 < Test::Unit::TestCase
     # @at2.build_rur_prediction(:mutualin_wnbrs)
     @at2.build_rur_prediction(:pagerank)
     @at2.build_rur_prediction(:prefattach)
+    @at2.build_rur_prediction(:katzout,:percentiles)
     @at2.build_rur_prediction(:prefattach,:percentiles)
+    @at2.build_rur_prediction(:inoutdeg,:directed_percentiles)
     #@at2.build_rur_preds(:pagerank)
     
     @at3.generate_csv_files(3)
