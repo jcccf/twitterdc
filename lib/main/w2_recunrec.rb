@@ -19,15 +19,18 @@ when 1
   puts "Rebuilding Rec Graphs"
   am.rebuild_rec_graph
 when 2
+  puts "Building Edge Files for Rec and Unrec Graphs"
+  am.build_rur_edge_count(k)
+when 3
   puts "Building the Rec/Unrec Outdegree counts for each person"
   am.build_rur_outdegrees
-when 3
+when 4
   puts "Building the Rec/Unrec Outdegree Plots for each person"
   am.build_rur_outdegrees_plot
-when 4
+when 5
   puts "Predicting Edges in the Graph using Degree"
   am.build_rur_prediction
-when 5
+when 6
   puts "Building the Edge Prediction Plots"
   am.build_rur_prediction_plot
 when 10

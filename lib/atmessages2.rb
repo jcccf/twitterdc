@@ -146,6 +146,7 @@ class AtMessages2
     when :absolute then d.output
     when :percentiles then d.output_percentiles
     when :directed_percentiles then d.output_directed_percentiles
+    when :directed_onesided_percentiles then d.output_directed_onesided_percentiles
     else raise ArgumentError, "Invalid type argument supplied to build_rur_preds"
     end
   end
@@ -203,6 +204,7 @@ class AtMessages2
         when :absolute then constants.image_filename(i)
         when :percentiles then constants.pimage_filename(i)
         when :directed_percentiles then constants.dir_pimage_filename(i)
+        when :directed_onesided_percentiles then constants.diro_pimage_filename(i)
         else raise ArgumentError, "Invalid imagefile parameter"
         end
       
@@ -213,6 +215,7 @@ class AtMessages2
     when :absolute then constants.filename_block &eblock
     when :percentiles then constants.pfilename_block &eblock
     when :directed_percentiles then constants.dir_pfilename_block &eblock
+    when :directed_onesided_percentiles then constants.diro_pfilename_block &eblock
     else raise ArgumentError, "Invalid type argument supplied"
     end
     
@@ -295,6 +298,31 @@ class AtMessages2
       end
     end
     File.rename(@c.people_msg+"~",@c.people_msg)
+  end
+  
+  # Get all edges corresponding to those in the reciprocated and unreciprocated subgraphs and their message counts
+  def build_rur_edge_count(i)
+    edges = Set.new
+    msg_edges = []
+    puts "Reading Reciprocated Unique"
+    File.open(@c.reciprocated_norep(i),"r").each do |l|
+      e1,e2 = l.split.map{|p| p.to_i}
+      edges << [e1,e2]
+    end
+    puts "Reading Unreciprocated..."
+    File.open(@c.unreciprocated(i),"r").each do |l|
+      e1,e2 = l.split.map{|p| p.to_i}
+      edges << [e1,e2]
+    end
+    puts "Reading n subgraph and writing..."
+    File.open(@c.rur_msg_edges(i)+"~","w") do |f|
+      File.open(@c.graph,"r").each do |l|
+        parts = l.split(" ", 4)
+        id1, id2, cnt = parts[0].to_i, parts[1].to_i, parts[2].to_i
+        f.puts "#{id1} #{id2} #{cnt}" if (edges.include?([id1,id2]) || edges.include?([id2,id1]))
+      end
+    end
+    File.rename(@c.rur_msg_edges(i)+"~",@c.rur_msg_edges(i))
   end
   
 end

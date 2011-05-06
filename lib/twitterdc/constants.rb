@@ -80,6 +80,10 @@ module TwitterDc
       @base+"/"+sprintf("%03d",@n)+"_unr_"+sprintf("%03d",@k)+"-"+sprintf("%03d",@k2)+"_ncount.txt"
     end
     
+    def rur_msg_edges(eye=@k, &block)
+      base_n_k("rur_msg_edges",eye, &block)
+    end
+    
     # Reciprocated and Unreciprocated Edge Count File
     def rur_edge_count
       @base+"/"+sprintf("%03d",@n)+"_rur_"+sprintf("%03d",@k)+"-"+sprintf("%03d",@k2)+"_ecount.txt"

@@ -17,8 +17,20 @@ module TwitterDc
         end
       end
       
-      def preferential_attachment_directed(e1,e2,type)
-        if type == :rec || @edge_type == :in
+      def preferential_attachment_directed(e1, e2, type)
+        if type == :rec
+          if @edge_type == :in
+            (@degrees[e1]-1) * @degrees[e2]
+          else
+            @degrees[e1] * (@degrees[e2]-1)
+          end
+        else
+          @degrees[e1] * @degrees[e2]
+        end
+      end
+      
+      def preferential_attachment_directed_onesided(e1,e2,type)
+        if type == :rec && @edge_type == :out
           @degrees[e2] - 1
         else
           @degrees[e2]
@@ -37,6 +49,14 @@ module TwitterDc
   
       def result(e1,e2,type)
         preferential_attachment(e1,e2,type)
+      end
+      
+      def result_directed(e1,e2,type)
+        preferential_attachment_directed(e1,e2,type)
+      end
+      
+      def result_directed_onesided(e1,e2,type)
+        preferential_attachment_directed_onesided(e1,e2,type)
       end
     end
 
@@ -71,6 +91,14 @@ module TwitterDc
         base_output_directed_percentiles_100 do |e1,e2,type|
           r = @cache[e1][e2]
           r ||= (@cache[e1][e2] = preferential_attachment_directed(e1,e2,type))
+        end
+      end
+      
+      def output_directed_onesided_percentiles
+        clear_cache
+        base_output_directed_onesided_percentiles_100 do |e1,e2,type|
+          r = @cache[e1][e2]
+          r ||= (@cache[e1][e2] = preferential_attachment_directed_onesided(e1,e2,type))
         end
       end
   

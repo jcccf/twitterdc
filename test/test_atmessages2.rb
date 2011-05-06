@@ -70,6 +70,15 @@ class TestAtMessages2 < Test::Unit::TestCase
     assert_file_equal("2 \n","data/003_005_unr_cc.txt")
   end
   
+  def test_build_rur_edge_count
+    @atm.filter_users_by_messages
+    @atm.filter_graph_by_users
+    @atm.build_graph
+    @at2.build_unrec_connected_components
+    
+    @at2.build_rur_edge_count(3)
+  end
+  
   def test_build_rur_outdegrees
     @atm.filter_users_by_messages
     @atm.filter_graph_by_users
