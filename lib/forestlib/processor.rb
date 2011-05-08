@@ -27,6 +27,18 @@ module ForestLib
       h
     end
     
+    # Converts "a b c" on each line of a file into "[a,b] => c" mappings, but cast c as a float
+    def self.to_tuple_hash_float(input_file, index_1 = 0, index_2 = 1, index_3 = 2)
+      self.validate(input_file)
+      maxsplit = [index_1, index_2, index_3].max + 1
+      h = {}
+      File.open(input_file,"r").each do |l|
+        parts = l.split(" ", maxsplit)
+        h[[parts[index_1].to_i,parts[index_2].to_i]] = parts[index_3].to_f
+      end
+      h
+    end
+    
     # Converts "a b" on each line into "a => [b1,...,bn]" mappings
     # If directed is set to false, then mappings are "a => [b1,...,bn]" and "b => [a1,...,an]"
     def self.to_hash_array(input_file, index_1 = 0, index_2 = 1, directed = true)

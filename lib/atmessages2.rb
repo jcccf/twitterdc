@@ -123,19 +123,24 @@ class AtMessages2
   # for unreciprocated edges, f is the total number of edges
   def build_rur_prediction(parameter=:degree, type=:absolute)
     d = case parameter
-    when :degree then ReciprocityHeuristics::Indegree.new(@c)
-    when :inmsg then ReciprocityHeuristics::Inmessages.new(@c)
-    when :outmsg then ReciprocityHeuristics::Outmessages.new(@c)
+    when :indegree then ReciprocityHeuristics::Degree.new(@c,:in)
+    when :outdegree then ReciprocityHeuristics::Degree.new(@c,:out)
+    when :inmsg then ReciprocityHeuristics::Messages.new(@c,:in)
+    when :outmsg then ReciprocityHeuristics::Messages.new(@c,:out)
     when :msgdeg then ReciprocityHeuristics::MessagesPerDegree.new(@c)
     when :inoutdeg then ReciprocityHeuristics::OutdegreePerIndegree.new(@c)
     when :mutualin_nbrs then ReciprocityHeuristics::MutualInJaccard.new(@c)
     when :mutualin_abs then ReciprocityHeuristics::MutualInAbsolute.new(@c)
     when :mutualin_wnbrs then ReciprocityHeuristics::MutualInAdamic.new(@c)
+    when :mutual_abs_in then ReciprocityHeuristics::MutualAbsolute.new(@c,:in)
+    when :mutual_abs_out then ReciprocityHeuristics::MutualAbsolute.new(@c,:out)
     when :katz then ReciprocityHeuristics::KatzNStep.new(@c)
     when :katzout then ReciprocityHeuristics::KatzNStep.new(@c,:out)
     when :katzinout then ReciprocityHeuristics::KatzNStep.new(@c,:inout)
     when :katz0005 then ReciprocityHeuristics::KatzNStep.new(@c,:in,2,0.005)
     when :katz01 then ReciprocityHeuristics::KatzNStep.new(@c,:in,2,0.1)
+    when :katzdir_in then ReciprocityHeuristics::KatzNStepDirected.new(@c,:in)
+    when :katzdir_out then ReciprocityHeuristics::KatzNStepDirected.new(@c,:out)
     when :pagerank then ReciprocityHeuristics::RootedPagerank.new(@c)
     when :pagerankout then ReciprocityHeuristics::RootedPagerank.new(@c,:out)
     when :prefattach then ReciprocityHeuristics::PreferentialAttachment.new(@c)
@@ -172,7 +177,17 @@ class AtMessages2
     else raise ArgumentError, "Invalid parameter supplied to build_rur_prediction_plot"
     end
     
+    plot_stuff(constants, type, false)
+    plot_stuff(constants, type, true)
+  end
+  
+  def plot_stuff(c, type, opp=false)
     eblock = Proc.new do |i,filename|
+      if not File.exists?(filename)
+        puts "File #{filename} doesn't exist!"
+        next
+      end
+        
       x1, x2, x3, y1, y2, y3, y4, y5 = [], [], [], [], [], [], [], []
       File.open(filename, "r").each do |l|
         p = l.split.map!{|v| v.to_f}
@@ -194,31 +209,54 @@ class AtMessages2
       end
       
       #titles = ["Correctly Guessed Reciprocated/Guessed Reciprocated", "Guessed Reciprocated/Total", "Correctly Guessed Unreciprocated/Guessed Unreciprocated","Guessed Unreciprocated/Total", "Correct Guesses/Total"]
-      titles = ["(E_k^r & F_theta) / F_t", "F_t/Total", "(E_k^u & F_t`) / F_t`", "F_t` / Total", "(E_k^r & F_t + E_k^u & F_t`) / Total"]
+      titles = if opp
+        ["(E_k^u & F_t`) / F_t`", "F_t`/Total", "(E_k^r & F_t) / F_t" , "F_t / Total", "(E_k^r & F_t + E_k^u & F_t`) / Total"]
+      else
+        ["(E_k^r & F_t) / F_t", "F_t/Total", "(E_k^u & F_t`) / F_t`", "F_t` / Total", "(E_k^r & F_t + E_k^u & F_t`) / Total"]
+      end
       xpN = [x1, x2, x3, x2, x2]
       ypN = [y1, y2, y3, y4, y5]
       max_accuracy_y, max_index = y5.each_with_index.max
       max_accuracy_x = x2[max_index]
       
-      imagefile = case type
-        when :absolute then constants.image_filename(i)
-        when :percentiles then constants.pimage_filename(i)
-        when :directed_percentiles then constants.dir_pimage_filename(i)
-        when :directed_onesided_percentiles then constants.diro_pimage_filename(i)
-        else raise ArgumentError, "Invalid imagefile parameter"
-        end
+      if opp
+        imagefile = case type
+          when :absolute then c.image_filename_opp(i)
+          when :percentiles then c.pimage_filename_opp(i)
+          when :directed_percentiles then c.dir_pimage_filename_opp(i)
+          when :directed_onesided_percentiles then c.diro_pimage_filename_opp(i)
+          else raise ArgumentError, "Invalid imagefile parameter"
+          end
+      else
+        imagefile = case type
+          when :absolute then c.image_filename(i)
+          when :percentiles then c.pimage_filename(i)
+          when :directed_percentiles then c.dir_pimage_filename(i)
+          when :directed_onesided_percentiles then c.diro_pimage_filename(i)
+          else raise ArgumentError, "Invalid imagefile parameter"
+          end
+      end
       
-      Plotter.plotN("Accuracy of Prediction (Max at %.3f,%f)" % [max_accuracy_x,max_accuracy_y],"Threshold (theta)","Accuracy",titles,xpN,ypN,imagefile)
+      Plotter.plotN("Accuracy of Prediction (Max at %.3f,%f)" % [max_accuracy_x,max_accuracy_y],"Percentile","Accuracy",titles,xpN,ypN,imagefile)
     end
     
-    case type
-    when :absolute then constants.filename_block &eblock
-    when :percentiles then constants.pfilename_block &eblock
-    when :directed_percentiles then constants.dir_pfilename_block &eblock
-    when :directed_onesided_percentiles then constants.diro_pfilename_block &eblock
-    else raise ArgumentError, "Invalid type argument supplied"
+    if opp
+      case type
+      when :absolute then c.filename_opp_block &eblock
+      when :percentiles then c.pfilename_opp_block &eblock
+      when :directed_percentiles then c.dir_pfilename_opp_block &eblock
+      when :directed_onesided_percentiles then c.diro_pfilename_opp_block &eblock
+      else raise ArgumentError, "Invalid type argument supplied"
+      end
+    else
+      case type
+      when :absolute then c.filename_block &eblock
+      when :percentiles then c.pfilename_block &eblock
+      when :directed_percentiles then c.dir_pfilename_block &eblock
+      when :directed_onesided_percentiles then c.diro_pfilename_block &eblock
+      else raise ArgumentError, "Invalid type argument supplied"
+      end
     end
-    
   end
   
   # Rebuild correct graphs for reciprocated subgraphs

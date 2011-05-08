@@ -7,7 +7,7 @@ module TwitterDc
   module ReciprocityHeuristics
 
     module PreferentialAttachmentHelpers
-      def preferential_attachment(e1, e2, type)
+      def hlp(e1, e2, type)
         if type == :rec
           (@degrees[e1]-1) * (@degrees[e2]-1)
         elsif @edge_type == :in
@@ -17,7 +17,7 @@ module TwitterDc
         end
       end
       
-      def preferential_attachment_directed(e1, e2, type)
+      def hlp_directed(e1, e2, type)
         if type == :rec
           if @edge_type == :in
             (@degrees[e1]-1) * @degrees[e2]
@@ -29,7 +29,7 @@ module TwitterDc
         end
       end
       
-      def preferential_attachment_directed_onesided(e1,e2,type)
+      def hlp_directed_onesided(e1,e2,type)
         if type == :rec && @edge_type == :out
           @degrees[e2] - 1
         else
@@ -39,24 +39,13 @@ module TwitterDc
     end
 
     class PreferentialAttachmentDecision
+      include BaseDecisionHelpers
       include PreferentialAttachmentHelpers
   
       def initialize(c, edge_type=:in, degrees)
         @c = c
         @degrees = degrees
         @edge_type = edge_type
-      end
-  
-      def result(e1,e2,type)
-        preferential_attachment(e1,e2,type)
-      end
-      
-      def result_directed(e1,e2,type)
-        preferential_attachment_directed(e1,e2,type)
-      end
-      
-      def result_directed_onesided(e1,e2,type)
-        preferential_attachment_directed_onesided(e1,e2,type)
       end
     end
 
@@ -76,30 +65,6 @@ module TwitterDc
   
       def self.constants(c, edge_type=:in)
         Constant.new(c, "prefattach", [edge_type])
-      end
-  
-      def output_percentiles
-        clear_cache
-        base_output_percentiles_100 do |e1,e2,type|
-          r = @cache[e1][e2]
-          r ||= (@cache[e1][e2] = preferential_attachment(e1,e2,type))
-        end
-      end
-      
-      def output_directed_percentiles
-        clear_cache
-        base_output_directed_percentiles_100 do |e1,e2,type|
-          r = @cache[e1][e2]
-          r ||= (@cache[e1][e2] = preferential_attachment_directed(e1,e2,type))
-        end
-      end
-      
-      def output_directed_onesided_percentiles
-        clear_cache
-        base_output_directed_onesided_percentiles_100 do |e1,e2,type|
-          r = @cache[e1][e2]
-          r ||= (@cache[e1][e2] = preferential_attachment_directed_onesided(e1,e2,type))
-        end
       end
   
       def output

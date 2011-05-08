@@ -28,6 +28,19 @@ module TwitterDc
       sprintf("%s/%03d_%03d_%s_pct.%s", @c.base+"/images", @c.n, k, @name_extras, "png")
     end
     
+    # Prediction given an undirected edge, separating into percentiles
+    def pfilename_opp(k)
+      sprintf("%s/%03d_%03d_%s_pct_opp.%s", @c.base, @c.n, k, @name_extras, "txt")
+    end
+    
+    def pfilename_trans_opp(k)
+      sprintf("%s/%03d_%03d_%s_pct_trans_opp.%s", @c.base, @c.n, k, @name_extras, "txt")
+    end
+    
+    def pimage_filename_opp(k)
+      sprintf("%s/%03d_%03d_%s_pct_opp.%s", @c.base+"/images", @c.n, k, @name_extras, "png")
+    end
+    
     # Prediction given a directed edge, separating into percentiles
     def dir_pfilename(k)
       sprintf("%s/%03d_%03d_%s_dir_pct.%s", @c.base, @c.n, k, @name_extras, "txt")
@@ -41,6 +54,19 @@ module TwitterDc
       sprintf("%s/%03d_%03d_%s_dir_pct.%s", @c.base+"/images", @c.n, k, @name_extras, "png")
     end
     
+    # Prediction given a directed edge, separating into percentiles
+    def dir_pfilename_opp(k)
+      sprintf("%s/%03d_%03d_%s_dir_pct_opp.%s", @c.base, @c.n, k, @name_extras, "txt")
+    end
+    
+    def dir_pfilename_trans_opp(k)
+      sprintf("%s/%03d_%03d_%s_dir_pct_trans_opp.%s", @c.base, @c.n, k, @name_extras, "txt")
+    end
+
+    def dir_pimage_filename_opp(k)
+      sprintf("%s/%03d_%03d_%s_dir_pct_opp.%s", @c.base+"/images", @c.n, k, @name_extras, "png")
+    end
+    
     # Prediction given a directed edge and only using one side, separating into percentiles
     def diro_pfilename(k)
       sprintf("%s/%03d_%03d_%s_diro_pct.%s", @c.base, @c.n, k, @name_extras, "txt")
@@ -52,6 +78,19 @@ module TwitterDc
 
     def diro_pimage_filename(k)
       sprintf("%s/%03d_%03d_%s_diro_pct.%s", @c.base+"/images", @c.n, k, @name_extras, "png")
+    end
+    
+    # Prediction given a directed edge and only using one side, separating into percentiles
+    def diro_pfilename_opp(k)
+      sprintf("%s/%03d_%03d_%s_diro_pct_opp.%s", @c.base, @c.n, k, @name_extras, "txt")
+    end
+    
+    def diro_pfilename_trans_opp(k)
+      sprintf("%s/%03d_%03d_%s_diro_pct_trans_opp.%s", @c.base, @c.n, k, @name_extras, "txt")
+    end
+
+    def diro_pimage_filename_opp(k)
+      sprintf("%s/%03d_%03d_%s_diro_pct_opp.%s", @c.base+"/images", @c.n, k, @name_extras, "png")
     end
     
     def filename_block
@@ -70,6 +109,14 @@ module TwitterDc
       end
     end
     
+    def pfilename_opp_block
+      raise "No block provided!" unless block_given?
+      @c.k.upto(@c.k2) do |i|
+        filename = sprintf("%s/%03d_%03d_%s_pct_opp.%s", @c.base, @c.n, i, @name_extras, "txt")
+        yield i, filename
+      end
+    end
+    
     def dir_pfilename_block
       raise "No block provided!" unless block_given?
       @c.k.upto(@c.k2) do |i|
@@ -78,10 +125,26 @@ module TwitterDc
       end
     end
     
+    def dir_pfilename_opp_block
+      raise "No block provided!" unless block_given?
+      @c.k.upto(@c.k2) do |i|
+        filename = sprintf("%s/%03d_%03d_%s_dir_pct_opp.%s", @c.base, @c.n, i, @name_extras, "txt")
+        yield i, filename
+      end
+    end
+    
     def diro_pfilename_block
       raise "No block provided!" unless block_given?
       @c.k.upto(@c.k2) do |i|
         filename = sprintf("%s/%03d_%03d_%s_diro_pct.%s", @c.base, @c.n, i, @name_extras, "txt")
+        yield i, filename
+      end
+    end
+    
+    def diro_pfilename_opp_block
+      raise "No block provided!" unless block_given?
+      @c.k.upto(@c.k2) do |i|
+        filename = sprintf("%s/%03d_%03d_%s_diro_pct_opp.%s", @c.base, @c.n, i, @name_extras, "txt")
         yield i, filename
       end
     end

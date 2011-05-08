@@ -88,18 +88,26 @@ class TestAtMessages2 < Test::Unit::TestCase
     #@at2.build_rur_prediction
     
     @at2.build_message_count
-    @at2.build_rur_prediction(:inmsg)
-    @at2.build_rur_prediction(:msgdeg)
-    @at2.build_rur_prediction(:inoutdeg)
-    @at2.build_rur_prediction(:mutualin_nbrs)
-    @at2.build_rur_prediction(:mutualin_abs)
+    # @at2.build_rur_prediction(:inmsg)
+    # @at2.build_rur_prediction(:msgdeg)
+    # @at2.build_rur_prediction(:inoutdeg)
+    # @at2.build_rur_prediction(:mutualin_nbrs)
+    # @at2.build_rur_prediction(:mutualin_abs)
     # puts "WNbrs"
     # @at2.build_rur_prediction(:mutualin_wnbrs)
-    @at2.build_rur_prediction(:pagerank)
-    @at2.build_rur_prediction(:prefattach)
+    # @at2.build_rur_prediction(:pagerank)
+    # @at2.build_rur_prediction(:prefattach)
     @at2.build_rur_prediction(:katzout,:percentiles)
     @at2.build_rur_prediction(:prefattach,:percentiles)
     @at2.build_rur_prediction(:inoutdeg,:directed_percentiles)
+    @at2.build_rur_prediction(:katzout,:percentiles)
+    @at2.build_rur_prediction(:katzout,:directed_percentiles)
+    @at2.build_rur_prediction(:katzout,:directed_onesided_percentiles)
+    @at2.build_rur_prediction(:katzdir_in,:percentiles)
+    @at2.build_rur_prediction(:katzdir_out,:percentiles)
+    @at2.build_rur_prediction(:mutual_abs_in,:percentiles)
+    @at2.build_rur_prediction(:mutual_abs_in,:directed_percentiles)
+    @at2.build_rur_prediction(:mutual_abs_in,:directed_onesided_percentiles)
     #@at2.build_rur_preds(:pagerank)
     
     @at3.generate_csv_files(3)

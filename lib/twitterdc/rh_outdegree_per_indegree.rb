@@ -7,7 +7,7 @@ module TwitterDc
   module ReciprocityHeuristics
     
     module OutdegreePerIndegreeHelpers
-      def ratio(e1,e2,type)
+      def hlp(e1,e2,type)
         e1_out, e2_out, e1_in, e2_in = @outdegrees[e1], @outdegrees[e2], @indegrees[e1], @indegrees[e2]
         if type == :rec
           e1_out -= 1
@@ -26,7 +26,7 @@ module TwitterDc
         r.nan? ? 0.0 : (r > 1 ? 1.0/r : r)
       end
       
-      def ratio_directed(e1,e2,type)
+      def hlp_directed(e1,e2,type)
         e1_out, e2_out, e1_in, e2_in = @outdegrees[e1], @outdegrees[e2], @indegrees[e1], @indegrees[e2]
         if type == :rec
           e2_out -= 1
@@ -40,7 +40,7 @@ module TwitterDc
         r.nan? ? 0.0 : (r > 1 ? 1.0/r : r)
       end
       
-      def ratio_directed_onesided(e1,e2,type)
+      def hlp_directed_onesided(e1,e2,type)
         e2_out, e2_in = @outdegrees[e2], @indegrees[e2]
         if type == :rec
           e2_out -= 1
@@ -52,22 +52,11 @@ module TwitterDc
     
     class OutdegreePerIndegreeDecision
       include OutdegreePerIndegreeHelpers
+      include BaseDecisionHelpers
       
       def initialize(c,indegrees,outdegrees)
         @indegrees = indegrees
         @outdegrees = outdegrees
-      end
-      
-      def result(e1,e2,type)
-        ratio(e1,e2,type)
-      end
-      
-      def result_directed(e1,e2,type)
-        ratio_directed(e1,e2,type)
-      end
-      
-      def result_directed_onesided(e1,e2,type)
-        ratio_directed_onesided(e1,e2,type)
       end
       
     end
@@ -86,30 +75,6 @@ module TwitterDc
       
       def self.constants(c)
         Constant.new(c, "inoutdeg")
-      end
-      
-      def output_percentiles
-        clear_cache
-        base_output_percentiles_100 do |e1,e2,type|
-          r = @cache[e1][e2]
-          r ||= (@cache[e1][e2] = ratio(e1,e2,type))
-        end
-      end
-      
-      def output_directed_percentiles
-        clear_cache
-        base_output_directed_percentiles_100 do |e1,e2,type|
-          r = @cache[e1][e2]
-          r ||= (@cache[e1][e2] = ratio_directed(e1,e2,type))
-        end
-      end
-      
-      def output_directed_onesided_percentiles
-        clear_cache
-        base_output_directed_onesided_percentiles_100 do |e1,e2,type|
-          r = @cache[e1][e2]
-          r ||= (@cache[e1][e2] = ratio_directed_onesided(e1,e2,type))
-        end
       end
       
       def output

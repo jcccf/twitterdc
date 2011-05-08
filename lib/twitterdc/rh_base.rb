@@ -76,6 +76,7 @@ module TwitterDc
       def base_output_percentiles_100 &edge_block
         @c.unreciprocated do |i,unr_filename|
           outfile = @constants.pfilename(i)
+          outfile_opp = @constants.pfilename_opp(i)
           edges = Helpers.read_rur_edges(unr_filename, @c.reciprocated_norep(i))
           p = ReciprocityHeuristics::Classifier.new
           edgevals = {}
@@ -89,32 +90,38 @@ module TwitterDc
           File.open(@constants.pfilename_trans(i),"w") do |f|
             p.print_transitions(f)
           end
-      
-          File.open(outfile+"~","w") do |f|
-            # Step through each threshold
-            @c.range_array_full.each do |j|
-              @e = j
-              @rec_no, @rec_correct, @unr_no, @unr_correct = 0, 0, 0, 0
-              edges.each do |e1,e2,type|
-                val = p.classified[[e1,e2]][:a]
-                if val >= @e
-                  @rec_no += 1
-                  @rec_correct += 1 if type == :rec
-                else
-                  @unr_no += 1
-                  @unr_correct += 1 if type == :unr
+          
+          File.open(outfile_opp+"~","w") do |f2|
+            File.open(outfile+"~","w") do |f|
+              # Step through each threshold
+              @c.range_array_full.each do |j|
+                @e = j
+                @rec_no, @rec_correct, @unr_no, @unr_correct = 0, 0, 0, 0
+                edges.each do |e1,e2,type|
+                  val = p.classified[[e1,e2]][:a]
+                  if val >= @e
+                    @rec_no += 1
+                    @rec_correct += 1 if type == :rec
+                  else
+                    @unr_no += 1
+                    @unr_correct += 1 if type == :unr
+                  end
                 end
+                f.puts "#{j} #{@rec_no} #{@rec_correct} #{@unr_no} #{@unr_correct} #{edges.count}"
+                # Equivalent to unr_no, Unr_correct, rec_no, rec_correct
+                f2.puts "#{j} #{@rec_no} #{@rec_no - @rec_correct} #{@unr_no} #{@unr_no - @unr_correct} #{edges.count}"
               end
-              f.puts "#{j} #{@rec_no} #{@rec_correct} #{@unr_no} #{@unr_correct} #{edges.count}"
             end
           end
           File.rename(outfile+"~",outfile)
+          File.rename(outfile_opp+"~",outfile_opp)
         end
       end
   
       def base_output_directed_percentiles_100 &edge_block
         @c.unreciprocated do |i,unr_filename|
           outfile = @constants.dir_pfilename(i)
+          outfile_opp = @constants.dir_pfilename_opp(i)
           edges = Helpers.read_rur_edges(unr_filename, @c.reciprocated_norep(i), true, true)
           p = ReciprocityHeuristics::Classifier.new
           edgevals = {}
@@ -129,32 +136,37 @@ module TwitterDc
             p.print_transitions(f)
           end
       
-          File.open(outfile+"~","w") do |f|
-            # Step through each threshold
-            @c.range_array_full.each do |j|
-              @e = j
-              @rec_no, @rec_correct, @unr_no, @unr_correct = 0, 0, 0, 0
-              edges.each do |e1,e2,type|
-                val = p.classified[[e1,e2]][:a]
-                #puts "%d %d" % [@e, val]
-                if val >= @e
-                  @rec_no += 1
-                  @rec_correct += 1 if type == :rec
-                else
-                  @unr_no += 1
-                  @unr_correct += 1 if type == :unr
+          File.open(outfile_opp+"~","w") do |f2|
+            File.open(outfile+"~","w") do |f|
+              # Step through each threshold
+              @c.range_array_full.each do |j|
+                @e = j
+                @rec_no, @rec_correct, @unr_no, @unr_correct = 0, 0, 0, 0
+                edges.each do |e1,e2,type|
+                  val = p.classified[[e1,e2]][:a]
+                  #puts "%d %d" % [@e, val]
+                  if val >= @e
+                    @rec_no += 1
+                    @rec_correct += 1 if type == :rec
+                  else
+                    @unr_no += 1
+                    @unr_correct += 1 if type == :unr
+                  end
                 end
+                f.puts "#{j} #{@rec_no} #{@rec_correct} #{@unr_no} #{@unr_correct} #{edges.count}"
+                f2.puts "#{j} #{@rec_no} #{@rec_no - @rec_correct} #{@unr_no} #{@unr_no - @unr_correct} #{edges.count}"
               end
-              f.puts "#{j} #{@rec_no} #{@rec_correct} #{@unr_no} #{@unr_correct} #{edges.count}"
             end
           end
           File.rename(outfile+"~",outfile)
+          File.rename(outfile_opp+"~",outfile_opp)
         end
       end
       
       def base_output_directed_onesided_percentiles_100 &edge_block
         @c.unreciprocated do |i,unr_filename|
           outfile = @constants.diro_pfilename(i)
+          outfile_opp = @constants.diro_pfilename_opp(i)
           edges = Helpers.read_rur_edges(unr_filename, @c.reciprocated_norep(i), true, true)
           p = ReciprocityHeuristics::Classifier.new
           edgevals = {}
@@ -169,26 +181,30 @@ module TwitterDc
             p.print_transitions(f)
           end
       
-          File.open(outfile+"~","w") do |f|
-            # Step through each threshold
-            @c.range_array_full.each do |j|
-              @e = j
-              @rec_no, @rec_correct, @unr_no, @unr_correct = 0, 0, 0, 0
-              edges.each do |e1,e2,type|
-                val = p.classified[[e1,e2]][:a]
-                #puts "%d %d" % [@e, val]
-                if val >= @e
-                  @rec_no += 1
-                  @rec_correct += 1 if type == :rec
-                else
-                  @unr_no += 1
-                  @unr_correct += 1 if type == :unr
+          File.open(outfile_opp+"~","w") do |f2|
+            File.open(outfile+"~","w") do |f|
+              # Step through each threshold
+              @c.range_array_full.each do |j|
+                @e = j
+                @rec_no, @rec_correct, @unr_no, @unr_correct = 0, 0, 0, 0
+                edges.each do |e1,e2,type|
+                  val = p.classified[[e1,e2]][:a]
+                  #puts "%d %d" % [@e, val]
+                  if val >= @e
+                    @rec_no += 1
+                    @rec_correct += 1 if type == :rec
+                  else
+                    @unr_no += 1
+                    @unr_correct += 1 if type == :unr
+                  end
                 end
+                f.puts "#{j} #{@rec_no} #{@rec_correct} #{@unr_no} #{@unr_correct} #{edges.count}"
+                f2.puts "#{j} #{@rec_no} #{@rec_no - @rec_correct} #{@unr_no} #{@unr_no - @unr_correct} #{edges.count}"
               end
-              f.puts "#{j} #{@rec_no} #{@rec_correct} #{@unr_no} #{@unr_correct} #{edges.count}"
             end
           end
           File.rename(outfile+"~",outfile)
+          File.rename(outfile_opp+"~",outfile_opp)
         end
       end
   
@@ -219,6 +235,47 @@ module TwitterDc
       
       def clear_cache
         @cache = Hash.new {|h,k| h[k] = {}}
+      end
+      
+      def output_percentiles
+        clear_cache
+        base_output_percentiles_100 do |e1,e2,type|
+          r = @cache[e1][e2]
+          r ||= (@cache[e1][e2] = hlp(e1,e2,type))
+          puts "For #{e1} #{e2} #{type} value is #{r}"
+        end
+      end
+  
+      def output_directed_percentiles
+        clear_cache
+        base_output_directed_percentiles_100 do |e1,e2,type|
+          r = @cache[e1][e2]
+          r ||= (@cache[e1][e2] = hlp_directed(e1,e2,type))
+          puts "For dir #{e1} #{e2} #{type} value is #{r}"
+        end
+      end
+      
+      def output_directed_onesided_percentiles
+        clear_cache
+        base_output_directed_onesided_percentiles_100 do |e1,e2,type|
+          r = @cache[e1][e2]
+          r ||= (@cache[e1][e2] = hlp_directed_onesided(e1,e2,type))
+          puts "For dir one #{e1} #{e2} #{type} value is #{r}"
+        end
+      end
+    end
+    
+    module BaseDecisionHelpers
+      def result(e1,e2,type)
+        hlp(e1,e2,type)
+      end
+      
+      def result_directed(e1,e2,type)
+        hlp_directed(e1,e2,type)
+      end
+      
+      def result_directed_onesided(e1,e2,type)
+        hlp_directed_onesided(e1,e2,type)
       end
     end
     
