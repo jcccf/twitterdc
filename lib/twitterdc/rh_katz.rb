@@ -48,7 +48,7 @@ module TwitterDc
             neighbors = @all_edges[current]
             if neighbors
               neighbors.each do |neighbor|
-                count += path_rec(depth+1, prev_array + [current], neighbor, target)
+                count += path_rec_1(depth+1, prev_array + [current], neighbor, target)
               end
             end
             count

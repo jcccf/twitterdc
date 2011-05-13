@@ -48,6 +48,7 @@ module TwitterDc
         else
           e2msg -= msgs_e2_e1
         end
+        #puts e1msg, e1deg, e2msg, e2deg
         r = (e1msg / e1deg) / (e2msg / e2deg)
         r.nan? ? 0.0 : (r > 1 ? 1.0/r : r)        
       end

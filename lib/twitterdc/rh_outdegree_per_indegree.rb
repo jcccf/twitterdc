@@ -18,6 +18,7 @@ module TwitterDc
           e1_out -= 1
           e2_in -= 1
         end
+        #puts e1_out, e1_in, e2_out, e2_in
         e1_r = ( e1_out / e1_in )
         e2_r = ( e2_out / e2_in )
         e1_r = e1_r.nan? ? 0.0 : e1_r
