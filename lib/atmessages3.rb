@@ -12,6 +12,43 @@ class AtMessages3
   def initialize(source_filename,base_dir,n,k1,k2,e1,e2,st)
     @c = Constants.new base_dir, n, k1, k2, e1, e2, st
     @a2 = AtMessages2.new(source_filename,base_dir,n,k1,k2,e1,e2,st)
+    @edges = []
+  end
+  
+  def setedges
+    @edges = ReciprocityHeuristics::Helpers.read_rur_edges(@c.unreciprocated(3), @c.reciprocated_norep(3), false).sort_by{rand}
+  end
+  
+  def generate_csv_files_sim(i)
+    #edges = ReciprocityHeuristics::Helpers.read_rur_edges(@c.unreciprocated(i), @c.reciprocated_norep(i), false).sort_by{rand}
+    edges = @edges
+    p_degrees = Processor.to_hash_float(@c.degrees) # In-degree of each edge
+    p_outdegrees = Processor.to_hash_float(@c.degrees, 0, 2) # Out-degree of each edge
+    p_inoutdegrees = Processor.to_hash_float_block(@c.degrees, 0, 1, 2) { |indeg,outdeg| outdeg/indeg } # Out-degree/In-degree of each node
+    p_inmsgs = Processor.to_hash_float(@c.people_msg, 0, 1) # In-message count of each edge
+    p_outmsgs = Processor.to_hash_float(@c.people_msg, 0, 2) # Out-message count of each edge
+    p_msgedges = Processor.to_tuple_hash_float(@c.rur_msg_edges(@c.k))
+    
+    dtp = DecisionTreePreprocessor.new(@c, i, "sim", edges)
+    dtp.percentiles_for(:indegree,ReciprocityHeuristics::DegreeDecision.new(@c,p_degrees,:in))
+    dtp.percentiles_for(:outdegree,ReciprocityHeuristics::DegreeDecision.new(@c,p_outdegrees,:out))
+    dtp.percentiles_for(:inoutdegree,ReciprocityHeuristics::OutdegreePerIndegreeDecision.new(@c,p_degrees,p_outdegrees))
+    dtp.percentiles_for(:inmessage,ReciprocityHeuristics::MessagesDecision.new(@c,p_inmsgs,p_msgedges,:in))
+    dtp.percentiles_for(:outmessage,ReciprocityHeuristics::MessagesDecision.new(@c,p_outmsgs,p_msgedges,:out))
+    dtp.percentiles_for(:inmsgdeg,ReciprocityHeuristics::MessagesPerDegreeDecision.new(@c,p_inmsgs,p_degrees,p_msgedges,:in))
+    dtp.percentiles_for(:outmsgdeg,ReciprocityHeuristics::MessagesPerDegreeDecision.new(@c,p_outmsgs,p_outdegrees,p_msgedges,:out))
+    dtp.output    
+  end
+  
+  def generate_csv_files_blah(i)
+    edges = ReciprocityHeuristics::Helpers.read_rur_edges(@c.unreciprocated(i), @c.reciprocated_norep(i), false).sort_by{rand}
+    p_degrees = Processor.to_hash_float(@c.degrees) # In-degree of each edge
+    p_outedges = Processor.to_hash_array(@c.edges, 0, 1)
+    
+    dtp = DecisionTreePreprocessor.new(@c, i, "blah", edges)
+    dtp.percentiles_for(:katz,ReciprocityHeuristics::KatzNStepDecision.new(@c,p_outedges))
+    dtp.percentiles_for(:prefattach,ReciprocityHeuristics::PreferentialAttachmentDecision.new(@c,p_degrees))
+    dtp.output
   end
   
   # Generate CSV input files for decision tree based on some classification criteria
@@ -201,7 +238,8 @@ class AtMessages3
     
     # Get edges and all reciprocated and unreciprocated edges
     puts "Getting ALL edges..."
-    edges = ReciprocityHeuristics::Helpers.read_rur_edges(@c.unreciprocated(i), @c.reciprocated_norep(i), false).sort_by{rand}
+    #edges = ReciprocityHeuristics::Helpers.read_rur_edges(@c.unreciprocated(i), @c.reciprocated_norep(i), false).sort_by{rand}
+    edges = @edges
     #puts edges.inspect
     
     # Classify edges
@@ -300,7 +338,7 @@ class AtMessages3
           #pagerank_weight = p_pagerank.result(e1,e2)
           #pagerank_classifier = ReciprocityHeuristics::Classifier.zero_to_one(pagerank_weight)
 
-          reciprocated = (type == 1) ? 'N' : 'Y'
+          reciprocated = (type == :unr) ? 'N' : 'Y'
           row = [degree_classifier, outdegree_classifier, inoutdegree_classifier, inmsg_classifier, outmsg_classifier, reciprocated]
           (j <= halfway) ? csv << row : csv_test << row
           j += 1

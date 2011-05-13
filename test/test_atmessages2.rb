@@ -110,7 +110,10 @@ class TestAtMessages2 < Test::Unit::TestCase
     @at2.build_rur_prediction(:mutual_abs_in,:directed_onesided_percentiles)
     #@at2.build_rur_preds(:pagerank)
     
+    @at3.setedges
     @at3.generate_csv_files(3)
+    @at3.generate_csv_files_blah(3)
+    @at3.generate_csv_files_sim(3)
     @at3.generate_csv_files_for_simple(3)
     @at3.decision_tree_generate(3)
     
