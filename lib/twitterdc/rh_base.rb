@@ -240,27 +240,27 @@ module TwitterDc
       def output_percentiles
         clear_cache
         base_output_percentiles_100 do |e1,e2,type|
+          #puts "For #{e1} #{e2} #{type} value is #{r}"
           r = @cache[e1][e2]
           r ||= (@cache[e1][e2] = hlp(e1,e2,type))
-          puts "For #{e1} #{e2} #{type} value is #{r}"
         end
       end
   
       def output_directed_percentiles
         clear_cache
         base_output_directed_percentiles_100 do |e1,e2,type|
+          #puts "For dir #{e1} #{e2} #{type} value is #{r}"
           r = @cache[e1][e2]
           r ||= (@cache[e1][e2] = hlp_directed(e1,e2,type))
-          puts "For dir #{e1} #{e2} #{type} value is #{r}"
         end
       end
       
       def output_directed_onesided_percentiles
         clear_cache
         base_output_directed_onesided_percentiles_100 do |e1,e2,type|
+          #puts "For dir one #{e1} #{e2} #{type} value is #{r}"
           r = @cache[e1][e2]
           r ||= (@cache[e1][e2] = hlp_directed_onesided(e1,e2,type))
-          puts "For dir one #{e1} #{e2} #{type} value is #{r}"
         end
       end
     end

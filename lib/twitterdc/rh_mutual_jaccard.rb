@@ -8,7 +8,7 @@ module TwitterDc
     
     module MutualJaccardHelpers
       def hlp(e1,e2,type)
-        puts @all_edges.inspect
+        #puts @all_edges.inspect
         edges1 = @all_edges[e1]
         edges1 ||= []
         edges2 = @all_edges[e2]
@@ -56,10 +56,10 @@ module TwitterDc
       include MutualJaccardHelpers
       
       def initialize(c,edge_type=:in)
-        super
+        super(c)
         @all_edges = case edge_type
           when :in then Processor.to_hash_array(@c.edges, 1, 0) # Reverse
-          when :out then Processor.to_hash_array(@c.edges, 1, 0)
+          when :out then Processor.to_hash_array(@c.edges, 0, 1)
           end
         @edge_type = edge_type
         @constants = Constant.new(c, "mutualin_nbrs", [edge_type])

@@ -141,6 +141,11 @@ module TwitterDc
       base_n_k("unr_cc",eye, &block)
     end
     
+    # Proportion in Connected Component in Unreciprocated Graph
+    def decision_edges(eye=@k, &block)
+      base_n_k("decedges_yaml",eye, &block)
+    end
+    
     def scc_of_unreciprocated_image
       @base+"/images/"+sprintf("%03d",@n)+"_"+sprintf("%03d",@k)+"-"+sprintf("%03d",@k2)+"_unr_scc.png"
     end

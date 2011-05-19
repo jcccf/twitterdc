@@ -20,16 +20,34 @@ when 1
   am.generate_csv_files(k)
 when 2
   puts "Generating Decision Tree for #{k}"
-  am.decision_tree_generate(k)
+  am.decision_tree_generate(k,"all")
 when 3
   puts "Testing Generated Tree of #{k} on #{k2}"
   am.decision_tree_evaluate(k,k2)
+when 5
+  puts "Combining..."
+  am.generate_csv_files_from_parts(k, "all2", ['simple','paths','link'])
+when 6
+  puts "Generating Combined Decision Tree for #{k}"
+  am.decision_tree_generate(k,"all2")
 when 11
   puts "Generating Simple CSV for #{k}"
-  am.generate_csv_files_for_simple(k)
+  am.generate_csv_files_simple(k)
 when 12
   puts "Generating Simple Decision Tree for #{k}"
-  am.decision_tree_generate_simple(k)
+  am.decision_tree_generate(k,"simple")
+when 21
+  puts "Generating Paths CSV for #{k}"
+  am.generate_csv_files_paths(k)
+when 22
+  puts "Generating Paths Decision Tree for #{k}"
+  am.decision_tree_generate(k,"paths")
+when 31
+  puts "Generating Link CSV for #{k}"
+  am.generate_csv_files_link(k)
+when 32
+  puts "Generating Links Decision Tree for #{k}"
+  am.decision_tree_generate(k,"link")
 else
   puts "Error in Stage Selection!"
 end

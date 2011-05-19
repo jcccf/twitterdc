@@ -23,6 +23,18 @@ module TwitterDc
       vals = {}
       puts "Calculating values for #{name.to_s}..."
       @edges.each do |e1,e2,type|
+        vals[[e1,e2]] = fun.result_directed(e1,e2,type)
+      end
+      puts "Classifying values for #{name.to_s}..."
+      @classifier.percentiles(name,vals)
+    end
+    
+    def percentiles_for_sym(name,fun)
+      raise "Repeated symbol passed to percentiles_for, #{name.to_s}" if @names.include? name
+      @names << name
+      vals = {}
+      puts "Calculating values for #{name.to_s}..."
+      @edges.each do |e1,e2,type|
         vals[[e1,e2]] = fun.result(e1,e2,type)
       end
       puts "Classifying values for #{name.to_s}..."
@@ -45,7 +57,7 @@ module TwitterDc
           @edges.each do |e1,e2,type|
             e = @classifier.classified[[e1,e2]]
             row = @names.inject([]) { |a,name| a << e[name] }
-            row << (type == :unr) ? 'N' : 'Y'
+            row << ((type == :unr) ? 'N' : 'Y')
             (j <= halfway) ? csv << row : csv_test << row
             j += 1
           end

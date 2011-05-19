@@ -8,7 +8,7 @@ module TwitterDc
     
     module MutualAbsoluteHelpers
       def hlp(e1,e2,type)
-        puts @all_edges.inspect
+        #puts @all_edges.inspect
         edges1 = @all_edges[e1]
         edges1 ||= []
         edges2 = @all_edges[e2]
@@ -73,7 +73,7 @@ module TwitterDc
       end
       
       def self.constants(c, edge_type=:in)
-        Constant.new(c, "mutualin_abs", [edge_type])
+        Constant.new(c, "mutual_abs", [edge_type])
       end
       
       def output

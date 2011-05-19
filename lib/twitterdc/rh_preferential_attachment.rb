@@ -8,33 +8,39 @@ module TwitterDc
 
     module PreferentialAttachmentHelpers
       def hlp(e1, e2, type)
-        if type == :rec
-          (@degrees[e1]-1) * (@degrees[e2]-1)
-        elsif @edge_type == :in
-          @degrees[e1] * (@degrees[e2]-1)
-        else
-          (@degrees[e1]-1) * @degrees[e2]
+        if @direction == :v_to_w
+          od1, id2 = @outdegrees[e1], @indegrees[e2]
+          return 0 unless od1 && id2
+          (od1-1) * (id2-1)
+        else # :w_to_v
+          id1, od2 = @indegrees[e1], @outdegrees[e2]
+          return 0 unless id1 && od2
+          if type == :rec
+            (id1-1) * (od2-1)
+          else
+            id1 * od2
+          end
         end
       end
       
       def hlp_directed(e1, e2, type)
-        if type == :rec
-          if @edge_type == :in
-            (@degrees[e1]-1) * @degrees[e2]
+        if @direction == :v_to_w
+          od1, id2 = @outdegrees[e1], @indegrees[e2]
+          return 0 unless od1 && id2
+          od1 * id2
+        else # :w_to_v
+          id1, od2 = @indegrees[e1], @outdegrees[e2]
+          return 0 unless id1 && od2
+          if type == :rec
+            (id1-1) * (od2-1)
           else
-            @degrees[e1] * (@degrees[e2]-1)
+            id1 * od2
           end
-        else
-          @degrees[e1] * @degrees[e2]
         end
       end
       
       def hlp_directed_onesided(e1,e2,type)
-        if type == :rec && @edge_type == :out
-          @degrees[e2] - 1
-        else
-          @degrees[e2]
-        end
+        raise ArgumentError, "Pref Attachment doesn't do onesided predictions"
       end
     end
 
@@ -42,10 +48,11 @@ module TwitterDc
       include BaseDecisionHelpers
       include PreferentialAttachmentHelpers
   
-      def initialize(c, edge_type=:in, degrees)
+      def initialize(c, indegrees, outdegrees, direction=:v_to_w)
         @c = c
-        @degrees = degrees
-        @edge_type = edge_type
+        @indegrees = indegrees
+        @outdegrees = outdegrees
+        @direction = direction
       end
     end
 
@@ -53,18 +60,16 @@ module TwitterDc
       include BaseHelpers
       include PreferentialAttachmentHelpers
   
-      def initialize(c, edge_type=:in)
+      def initialize(c, direction=:v_to_w)
         super(c)
-        @degrees = case edge_type
-        when :in then Processor.to_hash_float(@c.degrees)
-        when :out then Processor.to_hash_float(@c.degrees, 0, 2)
-        end
-        @edge_type = edge_type
-        @constants = Constant.new(c, "prefattach", [edge_type])
+        @indegrees = Processor.to_hash_float(@c.degrees)
+        @outdegrees = Processor.to_hash_float(@c.degrees, 0, 2)
+        @direction = direction
+        @constants = Constant.new(c, "prefattach", [direction])
       end
   
-      def self.constants(c, edge_type=:in)
-        Constant.new(c, "prefattach", [edge_type])
+      def self.constants(c, direction=:v_to_w)
+        Constant.new(c, "prefattach", [direction])
       end
   
       def output

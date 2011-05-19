@@ -38,6 +38,7 @@ module TwitterDc
         i, max, pct = 1, sorted.count.to_f, {}
         c = 0
         sorted.each do |k,v|
+          #puts v
           p = (i/max*100).ceil
           @classified[k][name] = p
           if c != p
