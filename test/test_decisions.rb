@@ -145,32 +145,120 @@ class TestAtMessages2 < Test::Unit::TestCase
     assert_equal(3.0/5,r.result_directed_onesided(2,3,:unr))
   end
   
-  def test_prefattach_in
-    
+  def test_prefattach_v_to_w
+    degs = { 1 => 2.0, 2 => 1.0, 3 => 3.0 }
+    outdegs = { 1 => 4.0, 2 => 5.0, 3 => 7.0 }
+    r = ReciprocityHeuristics::PreferentialAttachmentDecision.new(@c, degs, outdegs, :v_to_w)
+    assert_equal(0.0, r.result(1,2,:rec))
+    assert_equal(0.0, r.result(1,2,:unr))
+    assert_equal(4.0, r.result(2,1,:rec))
+    assert_equal(4.0, r.result(2,1,:unr))
+    assert_equal(4.0, r.result_directed(1,2,:rec))
+    assert_equal(4.0, r.result_directed(1,2,:unr))
+    assert_equal(10.0, r.result_directed(2,1,:rec))
+    assert_equal(10.0, r.result_directed(2,1,:unr))
+    assert_raises(ArgumentError){ r.result_directed_onesided(2,1,:rec) }
   end
   
-  def test_prefattach_out
-    
+  def test_prefattach_w_to_v
+    degs = { 1 => 2.0, 2 => 1.0, 3 => 3.0 }
+    outdegs = { 1 => 4.0, 2 => 5.0, 3 => 7.0 }
+    r = ReciprocityHeuristics::PreferentialAttachmentDecision.new(@c, degs, outdegs, :w_to_v)
+    assert_equal(4.0, r.result(1,2,:rec))
+    assert_equal(10.0, r.result(1,2,:unr))
+    assert_equal(0.0, r.result(2,1,:rec))
+    assert_equal(4.0, r.result(2,1,:unr))
+    assert_equal(4.0, r.result_directed(1,2,:rec))
+    assert_equal(10.0, r.result_directed(1,2,:unr))
+    assert_equal(0.0, r.result_directed(2,1,:rec))
+    assert_equal(4.0, r.result_directed(2,1,:unr))
+    assert_raises(ArgumentError){ r.result_directed_onesided(2,1,:rec) }
   end
   
   def test_mutual_adamic
-    
+    outdegs = {1 => 3.0, 2 => 1.0, 3 => 2.0, 4 => 1.0 }
+    all_edges = {1 => [2, 3, 4], 2 => [4], 3 => [1,4], 4 => [3]}
+    r = ReciprocityHeuristics::MutualInAdamicDecision.new(@c,outdegs,all_edges)
+    assert_equal(1.0/0,r.result(1,2,:rec))
+    assert_equal(1.0/0,r.result(1,3,:unr))
+    assert_equal(1.0/0,r.result(1,3,:rec))
+    assert_equal(1.0/0,r.result_directed(1,3,:unr))
+    assert_equal(1.0/0,r.result_directed(1,3,:rec))
+    outdegs = { 1 => 2.0, 2 => 2.0, 3 => 2.0 }
+    all_edges = { 1 => [2,3] , 2 => [1,3], 3 => [1,2] }
+    r = ReciprocityHeuristics::MutualInAdamicDecision.new(@c,outdegs,all_edges)
+    assert_equal(1.0/Math.log(2),r.result(1,2,:rec))
+    assert_equal(1.0/Math.log(2),r.result(1,2,:unr))
+    assert_equal(1.0/Math.log(2),r.result_directed(1,2,:rec))
+    assert_equal(1.0/Math.log(2),r.result_directed(1,2,:unr))
   end
   
   def test_mutual_abs_in
-    
+    edges = { 1 => [2,3] , 2 => [1,3], 3 => [1,2] }
+    r = ReciprocityHeuristics::MutualAbsoluteDecision.new(@c, edges, :in)
+    assert_equal(1,r.result(1,2,:rec))
+    assert_equal(1,r.result(1,3,:rec))
+    assert_equal(1,r.result(3,1,:rec))
+    assert_equal(1,r.result(1,2,:unr))
+    assert_equal(1,r.result(1,3,:unr))
+    assert_equal(1,r.result(3,1,:unr))
+    assert_equal(1,r.result_directed(3,1,:unr))
+    assert_equal(1,r.result_directed(1,3,:unr))
+    assert_equal(1,r.result_directed(3,1,:rec))
+    assert_equal(1,r.result_directed(1,3,:rec))
   end
   
   def test_mutual_abs_out
-    
+    edges = { 1 => [2,3] , 2 => [1,3], 3 => [1,2] }
+    r = ReciprocityHeuristics::MutualAbsoluteDecision.new(@c, edges, :out)
+    assert_equal(1,r.result(1,2,:rec))
+    assert_equal(1,r.result(1,3,:rec))
+    assert_equal(1,r.result(3,1,:rec))
+    assert_equal(1,r.result(1,2,:unr))
+    assert_equal(1,r.result(1,3,:unr))
+    assert_equal(1,r.result(3,1,:unr))
+    assert_equal(1,r.result_directed(3,1,:unr))
+    assert_equal(1,r.result_directed(1,3,:unr))
+    assert_equal(1,r.result_directed(3,1,:rec))
+    assert_equal(1,r.result_directed(1,3,:rec))
   end
   
   def test_mutual_jaccard_in
-    
+    edges = { 1 => [2,3] , 2 => [1,3], 3 => [1,2] }
+    r = ReciprocityHeuristics::MutualJaccardDecision.new(@c, edges, :in)
+    assert_equal(1,r.result(1,2,:rec))
+    assert_equal(1,r.result(1,3,:rec))
+    assert_equal(1,r.result(3,1,:rec))
+    assert_equal(1,r.result(1,2,:unr))
+    assert_equal(1,r.result(1,3,:unr))
+    assert_equal(1,r.result(3,1,:unr))
+    assert_equal(0.5,r.result_directed(1,2,:rec))
+    assert_equal(0.5,r.result_directed(1,2,:unr))
+    edges = { 1 => [2,3,4], 2 => [1,4,5]}
+    r = ReciprocityHeuristics::MutualJaccardDecision.new(@c, edges, :in)
+    assert_equal(1.0/3,r.result(1,2,:rec))
+    assert_equal(1.0/3,r.result(1,2,:unr))
+    assert_equal(0.25,r.result_directed(1,2,:rec))
+    assert_equal(0.25,r.result_directed(1,2,:unr))
   end
   
   def test_mutual_jaccard_out
-    
+    edges = { 1 => [2,3] , 2 => [1,3], 3 => [1,2] }
+    r = ReciprocityHeuristics::MutualJaccardDecision.new(@c, edges, :out)
+    assert_equal(1,r.result(1,2,:rec))
+    assert_equal(1,r.result(1,3,:rec))
+    assert_equal(1,r.result(3,1,:rec))
+    assert_equal(1,r.result(1,2,:unr))
+    assert_equal(1,r.result(1,3,:unr))
+    assert_equal(1,r.result(3,1,:unr))
+    assert_equal(0.5,r.result_directed(1,2,:rec))
+    assert_equal(0.5,r.result_directed(1,2,:unr))
+    edges = { 1 => [2,3,4], 2 => [1,4,5]}    
+    r = ReciprocityHeuristics::MutualJaccardDecision.new(@c, edges, :out)
+    assert_equal(1.0/3,r.result(1,2,:rec))
+    assert_equal(1.0/3,r.result(1,2,:unr))
+    assert_equal(0.25,r.result_directed(1,2,:rec))
+    assert_equal(0.25,r.result_directed(1,2,:unr))
   end
 
 end
