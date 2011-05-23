@@ -30,6 +30,12 @@ when 5
 when 6
   puts "Generating Combined Decision Tree for #{k}"
   am.decision_tree_generate(k,"all2")
+when 7
+  puts "Combining everything..."
+  am.generate_csv_files_from_parts(k, "all3", ['simple','paths','link','vw'])
+when 8
+  puts "Generating Combined Everything Decision Tree for #{k}"
+  am.decision_tree_generate(k,"all3")
 when 11
   puts "Generating Simple CSV for #{k}"
   am.generate_csv_files_simple(k)
@@ -48,6 +54,12 @@ when 31
 when 32
   puts "Generating Links Decision Tree for #{k}"
   am.decision_tree_generate(k,"link")
+when 41
+  puts "Generating VW CSV for #{k}"
+  am.generate_csv_files_vw(k)
+when 42
+  puts "Generating VW Decision Tree for #{k}"
+  am.decision_tree_generate(k,"vw")
 else
   puts "Error in Stage Selection!"
 end

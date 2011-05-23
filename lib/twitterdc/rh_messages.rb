@@ -39,13 +39,21 @@ module TwitterDc
       end
       
       def hlp_directed_onesided(e1,e2,type)
-        msgs_e2_e1 = @msgedges[[e2,e1]]
-        msgs_e2_e1 ||= 0
+        msgs_e2_e1 = (@msgedges[[e2,e1]] || 0)
         d2 = @messages[e2]
         if @edge_type == :out
           d2 -= msgs_e2_e1
         end
         d2
+      end
+      
+      def hlp_directed_v(e1,e2,type)
+        msgs_e2_e1 = (@msgedges[[e2,e1]] || 0)
+        d1 = @messages[e1]
+        if @edge_type == :in
+          d1 -= msgs_e2_e1
+        end
+        d1
       end
       
     end

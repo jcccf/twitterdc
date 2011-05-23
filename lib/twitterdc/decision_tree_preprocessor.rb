@@ -41,6 +41,30 @@ module TwitterDc
       @classifier.percentiles(name,vals)
     end
     
+    def percentiles_for_w(name,fun)
+      raise "Repeated symbol passed to percentiles_for, #{name.to_s}" if @names.include? name
+      @names << name
+      vals = {}
+      puts "Calculating values for #{name.to_s}..."
+      @edges.each do |e1,e2,type|
+        vals[[e1,e2]] = fun.result_directed_onesided(e1,e2,type)
+      end
+      puts "Classifying values for #{name.to_s}..."
+      @classifier.percentiles(name,vals)
+    end
+    
+    def percentiles_for_v(name,fun)
+      raise "Repeated symbol passed to percentiles_for, #{name.to_s}" if @names.include? name
+      @names << name
+      vals = {}
+      puts "Calculating values for #{name.to_s}..."
+      @edges.each do |e1,e2,type|
+        vals[[e1,e2]] = fun.result_directed_v(e1,e2,type)
+      end
+      puts "Classifying values for #{name.to_s}..."
+      @classifier.percentiles(name,vals)
+    end
+    
     def output
       # Generate label array
       label_array = @names.inject([]) { |a,name| a << name.to_s }

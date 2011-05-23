@@ -154,6 +154,7 @@ class AtMessages2
     when :percentiles then d.output_percentiles
     when :directed_percentiles then d.output_directed_percentiles
     when :directed_onesided_percentiles then d.output_directed_onesided_percentiles
+    when :directed_v_percentiles then d.output_directed_v_percentiles
     else raise ArgumentError, "Invalid type argument supplied to build_rur_preds"
     end
   end
@@ -234,6 +235,7 @@ class AtMessages2
           when :percentiles then c.pimage_filename_opp(i)
           when :directed_percentiles then c.dir_pimage_filename_opp(i)
           when :directed_onesided_percentiles then c.diro_pimage_filename_opp(i)
+          when :directed_v_percentiles then c.dirv_pimage_filename_opp(i)
           else raise ArgumentError, "Invalid imagefile parameter"
           end
       else
@@ -242,6 +244,7 @@ class AtMessages2
           when :percentiles then c.pimage_filename(i)
           when :directed_percentiles then c.dir_pimage_filename(i)
           when :directed_onesided_percentiles then c.diro_pimage_filename(i)
+          when :directed_v_percentiles then c.dirv_pimage_filename(i)
           else raise ArgumentError, "Invalid imagefile parameter"
           end
       end
@@ -255,6 +258,7 @@ class AtMessages2
       when :percentiles then c.pfilename_opp_block &eblock
       when :directed_percentiles then c.dir_pfilename_opp_block &eblock
       when :directed_onesided_percentiles then c.diro_pfilename_opp_block &eblock
+      when :directed_v_percentiles then c.dirv_pfilename_opp_block &eblock
       else raise ArgumentError, "Invalid type argument supplied"
       end
     else
@@ -263,6 +267,7 @@ class AtMessages2
       when :percentiles then c.pfilename_block &eblock
       when :directed_percentiles then c.dir_pfilename_block &eblock
       when :directed_onesided_percentiles then c.diro_pfilename_block &eblock
+      when :directed_v_percentiles then c.dirv_pfilename_block &eblock
       else raise ArgumentError, "Invalid type argument supplied"
       end
     end

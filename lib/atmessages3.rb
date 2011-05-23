@@ -37,6 +37,33 @@ class AtMessages3
     end
   end
   
+  def generate_csv_files_vw(i)
+    edges = get_edges(i)
+    p_degrees = Processor.to_hash_float(@c.degrees) # In-degree of each edge
+    p_outdegrees = Processor.to_hash_float(@c.degrees, 0, 2) # Out-degree of each edge
+    p_inoutdegrees = Processor.to_hash_float_block(@c.degrees, 0, 1, 2) { |indeg,outdeg| outdeg/indeg } # Out-degree/In-degree of each node
+    p_inmsgs = Processor.to_hash_float(@c.people_msg, 0, 1) # In-message count of each edge
+    p_outmsgs = Processor.to_hash_float(@c.people_msg, 0, 2) # Out-message count of each edge
+    p_msgedges = Processor.to_tuple_hash_float(@c.rur_msg_edges(@c.k))
+    
+    dtp = dtp = DecisionTreePreprocessor.new(@c, i, "vw", edges)
+    dtp.percentiles_for_v(:indegree_v,ReciprocityHeuristics::DegreeDecision.new(@c,p_degrees,:in))
+    dtp.percentiles_for_v(:outdegree_v,ReciprocityHeuristics::DegreeDecision.new(@c,p_outdegrees,:out))
+    dtp.percentiles_for_v(:inoutdegree_v,ReciprocityHeuristics::OutdegreePerIndegreeDecision.new(@c,p_degrees,p_outdegrees))
+    dtp.percentiles_for_v(:inmessage_v,ReciprocityHeuristics::MessagesDecision.new(@c,p_inmsgs,p_msgedges,:in))
+    dtp.percentiles_for_v(:outmessage_v,ReciprocityHeuristics::MessagesDecision.new(@c,p_outmsgs,p_msgedges,:out))
+    dtp.percentiles_for_v(:inmsgdeg_v,ReciprocityHeuristics::MessagesPerDegreeDecision.new(@c,p_inmsgs,p_degrees,p_msgedges,:in))
+    dtp.percentiles_for_v(:outmsgdeg_v,ReciprocityHeuristics::MessagesPerDegreeDecision.new(@c,p_outmsgs,p_outdegrees,p_msgedges,:out))
+    dtp.percentiles_for_w(:indegree_w,ReciprocityHeuristics::DegreeDecision.new(@c,p_degrees,:in))
+    dtp.percentiles_for_w(:outdegree_w,ReciprocityHeuristics::DegreeDecision.new(@c,p_outdegrees,:out))
+    dtp.percentiles_for_w(:inoutdegree_w,ReciprocityHeuristics::OutdegreePerIndegreeDecision.new(@c,p_degrees,p_outdegrees))
+    dtp.percentiles_for_w(:inmessage_w,ReciprocityHeuristics::MessagesDecision.new(@c,p_inmsgs,p_msgedges,:in))
+    dtp.percentiles_for_w(:outmessage_w,ReciprocityHeuristics::MessagesDecision.new(@c,p_outmsgs,p_msgedges,:out))
+    dtp.percentiles_for_w(:inmsgdeg_w,ReciprocityHeuristics::MessagesPerDegreeDecision.new(@c,p_inmsgs,p_degrees,p_msgedges,:in))
+    dtp.percentiles_for_w(:outmsgdeg_w,ReciprocityHeuristics::MessagesPerDegreeDecision.new(@c,p_outmsgs,p_outdegrees,p_msgedges,:out))
+    dtp.output
+  end
+  
   def generate_csv_files_simple(i)
     edges = get_edges(i)
     #edges = @edges

@@ -207,6 +207,51 @@ module TwitterDc
           File.rename(outfile_opp+"~",outfile_opp)
         end
       end
+      
+      def base_output_directed_v_percentiles_100 &edge_block
+        @c.unreciprocated do |i,unr_filename|
+          outfile = @constants.dirv_pfilename(i)
+          outfile_opp = @constants.dirv_pfilename_opp(i)
+          edges = Helpers.read_rur_edges(unr_filename, @c.reciprocated_norep(i), true, true)
+          p = ReciprocityHeuristics::Classifier.new
+          edgevals = {}
+          edges.each do |e1,e2,type|
+            edgevals[[e1,e2]] = edge_block.call(e1,e2,type)
+          end
+      
+          p.percentiles100(:a, edgevals)
+          
+          # Print percentile transitions
+          File.open(@constants.dirv_pfilename_trans(i),"w") do |f|
+            p.print_transitions(f)
+          end
+      
+          File.open(outfile_opp+"~","w") do |f2|
+            File.open(outfile+"~","w") do |f|
+              # Step through each threshold
+              @c.range_array_full.each do |j|
+                @e = j
+                @rec_no, @rec_correct, @unr_no, @unr_correct = 0, 0, 0, 0
+                edges.each do |e1,e2,type|
+                  val = p.classified[[e1,e2]][:a]
+                  #puts "%d %d" % [@e, val]
+                  if val >= @e
+                    @rec_no += 1
+                    @rec_correct += 1 if type == :rec
+                  else
+                    @unr_no += 1
+                    @unr_correct += 1 if type == :unr
+                  end
+                end
+                f.puts "#{j} #{@rec_no} #{@rec_correct} #{@unr_no} #{@unr_correct} #{edges.count}"
+                f2.puts "#{j} #{@rec_no} #{@rec_no - @rec_correct} #{@unr_no} #{@unr_no - @unr_correct} #{edges.count}"
+              end
+            end
+          end
+          File.rename(outfile+"~",outfile)
+          File.rename(outfile_opp+"~",outfile_opp)
+        end
+      end
   
       # Prediction based on whether the variable is between e and 1/e
       def e_to_einv_proc(my_var)
@@ -263,6 +308,15 @@ module TwitterDc
           r ||= (@cache[e1][e2] = hlp_directed_onesided(e1,e2,type))
         end
       end
+      
+      def output_directed_v_percentiles
+        clear_cache
+        base_output_directed_v_percentiles_100 do |e1,e2,type|
+          #puts "For dir one #{e1} #{e2} #{type} value is #{r}"
+          r = @cache[e1][e2]
+          r ||= (@cache[e1][e2] = hlp_directed_v(e1,e2,type))
+        end
+      end
     end
     
     module BaseDecisionHelpers
@@ -276,6 +330,10 @@ module TwitterDc
       
       def result_directed_onesided(e1,e2,type)
         hlp_directed_onesided(e1,e2,type)
+      end
+      
+      def result_directed_v(e1,e2,type)
+        hlp_directed_v(e1,e2,type)
       end
     end
     

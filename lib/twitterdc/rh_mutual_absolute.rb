@@ -37,12 +37,13 @@ module TwitterDc
       end
       
       def hlp_directed_onesided(e1,e2,type)
-        edges2 = @all_edges[e2]
-        edges2 ||= []
-        if @edge_type == :out
-          edges2 -= [e1]
-        end
-        edges2.size
+        raise ArgumentError, "MutualAbsolute does not care about onesided"
+        # edges2 = @all_edges[e2]
+        # edges2 ||= []
+        # if @edge_type == :out
+        #   edges2 -= [e1]
+        # end
+        # edges2.size
       end
     end
     

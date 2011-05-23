@@ -45,6 +45,16 @@ module TwitterDc
         end
         d2
       end
+      
+      def hlp_directed_v(e1,e2,type)
+        d1 = @degrees[e1]
+        if type == :rec
+          if @edge_type == :in
+            d1 -= 1
+          end
+        end
+        d1
+      end
     end
     
     class DegreeDecision

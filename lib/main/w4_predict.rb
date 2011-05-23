@@ -20,6 +20,7 @@ opts = OptionParser.new do |opts|
     when 1 then :percentiles
     when 2 then :directed_percentiles
     when 3 then :directed_onesided_percentiles
+    when 4 then :directed_v_percentiles
     else raise "Invalid -t passed"
     end
   end

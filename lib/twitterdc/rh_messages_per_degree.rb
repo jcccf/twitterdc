@@ -64,6 +64,17 @@ module TwitterDc
         r.nan? ? 0.0 : r
       end
       
+      def hlp_directed_v(e1,e2,type)
+        e1msg, e1deg = @msgs[e1], @degs[e1]
+        msgs_e2_e1 = (@msgedges[[e2,e1]] || 0)
+        if @edge_type == :in
+          e1deg -= 1 if type == :rec
+          e1msg -= msgs_e2_e1
+        end
+        r = e1msg / e1deg
+        r.nan? ? 0.0 : r
+      end
+      
     end
     
     class MessagesPerDegreeDecision

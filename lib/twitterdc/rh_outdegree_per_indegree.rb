@@ -49,6 +49,15 @@ module TwitterDc
         r = e2_out / e2_in
         r.nan? ? 0.0 : r
       end
+      
+      def hlp_directed_v(e1,e2,type)
+        e1_out, e1_in = @outdegrees[e1], @indegrees[e1]
+        if type == :rec
+          e1_in -= 1
+        end
+        r = e1_out / e1_in
+        r.nan? ? 0.0 : r
+      end
     end
     
     class OutdegreePerIndegreeDecision
