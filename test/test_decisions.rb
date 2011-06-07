@@ -27,6 +27,8 @@ class TestAtMessages2 < Test::Unit::TestCase
     assert_equal(r.result_directed(1,2,:unr),10.0/20)
     assert_equal(r.result_directed_onesided(1,2,:unr),20.0)
     assert_equal(r.result_directed_onesided(1,2,:rec),20.0)
+    assert_equal(r.result_directed_v(1,2,:unr),10.0)
+    assert_equal(r.result_directed_v(1,2,:rec),9.0)
   end
   
   def test_degrees_out
@@ -40,6 +42,8 @@ class TestAtMessages2 < Test::Unit::TestCase
     assert_equal(r.result_directed(1,2,:unr),10.0/20)
     assert_equal(r.result_directed_onesided(1,2,:unr),20.0)
     assert_equal(r.result_directed_onesided(1,2,:rec),19.0)
+    assert_equal(r.result_directed_v(1,2,:unr),10.0)
+    assert_equal(r.result_directed_v(1,2,:rec),10.0)
   end
   
   def test_messages_in
@@ -52,6 +56,8 @@ class TestAtMessages2 < Test::Unit::TestCase
     assert_equal(18.0/24,r.result_directed(1,2,:unr))
     assert_equal(24,r.result_directed_onesided(1,2,:rec))
     assert_equal(24,r.result_directed_onesided(1,2,:unr))
+    assert_equal(18,r.result_directed_v(1,2,:rec))
+    assert_equal(18,r.result_directed_v(1,2,:unr))
   end
   
   def test_messages_out
@@ -64,6 +70,8 @@ class TestAtMessages2 < Test::Unit::TestCase
     assert_equal(19.0/23,r.result_directed(1,2,:unr))
     assert_equal(23,r.result_directed_onesided(1,2,:rec))
     assert_equal(23,r.result_directed_onesided(1,2,:unr))
+    assert_equal(19,r.result_directed_v(1,2,:rec))
+    assert_equal(19,r.result_directed_v(1,2,:unr))
   end
   
   def test_katz
@@ -106,11 +114,13 @@ class TestAtMessages2 < Test::Unit::TestCase
     assert_equal(0.4,r.result(1,3,:rec))
     assert_equal(0.8,r.result(1,3,:unr))
     assert_equal(1.0,r.result_directed(1,3,:unr))
-    assert_equal(0.5,r.result_directed(1,3,:rec))
+    assert_equal(2.0,r.result_directed(1,3,:rec))
     assert_equal(8.0/15,r.result_directed(3,1,:unr))
     assert_equal(0.8,r.result_directed(3,1,:rec))
     assert_equal(5.0,r.result_directed_onesided(1,3,:unr))
     assert_equal(5.0,r.result_directed_onesided(1,3,:rec))
+    assert_equal(5.0,r.result_directed_v(1,3,:unr))
+    assert_equal(10.0,r.result_directed_v(1,3,:rec))
   end
   
   def test_messages_per_degree_out
@@ -123,10 +133,12 @@ class TestAtMessages2 < Test::Unit::TestCase
     assert_equal(0.6,r.result(1,3,:unr))
     assert_equal(1.0,r.result_directed(1,3,:unr))
     assert_equal(2.0/3,r.result_directed(1,3,:rec))
-    assert_equal(0.3,r.result_directed(3,1,:unr))
-    assert_equal(0.6,r.result_directed(3,1,:rec))
+    assert_equal(10.0/3,r.result_directed(3,1,:unr))
+    assert_equal(5.0/3,r.result_directed(3,1,:rec))
     assert_equal(5.0,r.result_directed_onesided(1,3,:unr))
     assert_equal(7.5,r.result_directed_onesided(1,3,:rec))
+    assert_equal(5.0,r.result_directed_v(1,3,:unr))
+    assert_equal(5.0,r.result_directed_v(1,3,:rec))
   end
   
   def test_outdegree_per_indegree
@@ -139,10 +151,12 @@ class TestAtMessages2 < Test::Unit::TestCase
     assert_equal(9.0/196,r.result(2,3,:unr))
     assert_equal(1.0/49,r.result(3,2,:rec))
     assert_equal(4.0/250,r.result(3,2,:unr))
-    assert_equal(4.0/250,r.result_directed(2,3,:rec))
-    assert_equal(9.0/250,r.result_directed(2,3,:unr))
+    assert_equal(250/4.0,r.result_directed(2,3,:rec))
+    assert_equal((50.0/3.0)/(3.0/5.0),r.result_directed(2,3,:unr))
     assert_equal(2.0/5,r.result_directed_onesided(2,3,:rec))
     assert_equal(3.0/5,r.result_directed_onesided(2,3,:unr))
+    assert_equal(50.0/2,r.result_directed_v(2,3,:rec))
+    assert_equal(50.0/3,r.result_directed_v(2,3,:unr))
   end
   
   def test_prefattach_v_to_w

@@ -33,7 +33,7 @@ module TwitterDc
           end
         end
         r = d1 / d2
-        r.nan? ? 0.0 : (r > 1 ? 1.0/r : r)
+        r.nan? ? 0.0 : r
       end
       
       def hlp_directed_onesided(e1,e2,type)

@@ -36,6 +36,12 @@ when 7
 when 8
   puts "Generating Combined Everything Decision Tree for #{k}"
   am.decision_tree_generate(k,"all3")
+when 9
+  puts "Combining (vw,paths,link)..."
+  am.generate_csv_files_from_parts(k, "all2x", ['vw','paths','link'])
+when 10
+  puts "Generating Combined (vw,paths,link) Decision Tree for #{k}"
+  am.decision_tree_generate(k,"all2x")
 when 11
   puts "Generating Simple CSV for #{k}"
   am.generate_csv_files_simple(k)
@@ -60,6 +66,24 @@ when 41
 when 42
   puts "Generating VW Decision Tree for #{k}"
   am.decision_tree_generate(k,"vw")
+when 101
+  puts "Generating Combined Decision Tree for #{k}"
+  am.decision_tree_generate_rev(k,"all2")
+when 102
+  puts "Generating Combined Everything Decision Tree for #{k}"
+  am.decision_tree_generate_rev(k,"all3")
+when 103
+  puts "Generating Simple Decision Tree for #{k}"
+  am.decision_tree_generate_rev(k,"simple")
+when 104
+  puts "Generating Paths Decision Tree for #{k}"
+  am.decision_tree_generate_rev(k,"paths")
+when 105
+  puts "Generating Links Decision Tree for #{k}"
+  am.decision_tree_generate_rev(k,"link")
+when 106
+  puts "Generating VW Decision Tree for #{k}"
+  am.decision_tree_generate_rev(k,"vw")
 else
   puts "Error in Stage Selection!"
 end

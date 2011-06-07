@@ -50,7 +50,7 @@ module TwitterDc
         end
         #puts e1msg, e1deg, e2msg, e2deg
         r = (e1msg / e1deg) / (e2msg / e2deg)
-        r.nan? ? 0.0 : (r > 1 ? 1.0/r : r)        
+        r.nan? ? 0.0 : r
       end
       
       def hlp_directed_onesided(e1,e2,type)

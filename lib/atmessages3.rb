@@ -241,6 +241,43 @@ class AtMessages3
       unmatched.each { |u| f.puts u.inspect }
     end
   end
+  
+  # TODO Fix This
+  # Generate decision tree rules using training data and test against test data
+  def decision_tree_generate_rev(i, prefix)
+    csv_training = "csv_training_" + prefix
+    csv_test = "csv_test_" + prefix
+    decision_rules = "decision_rules_rev_" + prefix
+    decision_results = "decision_results_rev_" + prefix
+    
+    #Generate
+    puts "Reverse Generating rules based on training data..."
+    @dt = DecisionTree.new(Constant.new(@c,csv_test).filename(i))
+    File.open(Constant.new(@c,decision_rules).filename(i),"w") do |f|
+      f.puts @dt.get_rules
+    end
+    
+    # Test
+    puts "Reverse Testing data on generated rules..."
+    data = CSV.read(Constant.new(@c,csv_training).filename(i))
+    data.shift
+    correct, count, unmatched = 0, 0, []
+    data.each do |d|
+      puts d[0..-2].inspect
+      puts d[-1].inspect
+      begin
+        correct += 1 if @dt.eval(d[0..-2]) == d[-1]
+      rescue NameError
+        unmatched << d
+      end
+      count += 1
+    end
+    File.open(Constant.new(@c,decision_results).filename(i),"w") do |f|
+      f.puts "Accuracy: %d %d %.4f" % [correct, count, (correct-0.0)/count]
+      f.puts "Unmatched: "
+      unmatched.each { |u| f.puts u.inspect }
+    end
+  end
 
   # Test rules generated for i on j
   def decision_tree_evaluate(i,j)
