@@ -121,7 +121,7 @@ class AtMessages2
   # a is the threshold value, b is the number of predictions of reciprocated edges
   # c is the number of correct predictions of reciprocated edges, e & f are the same
   # for unreciprocated edges, f is the total number of edges
-  def build_rur_prediction(parameter=:degree, type=:absolute)
+  def build_rur_prediction(parameter=:degree, type=:absolute, filter_name=nil)
     d = case parameter
     when :indegree then ReciprocityHeuristics::Degree.new(@c,:in)
     when :outdegree then ReciprocityHeuristics::Degree.new(@c,:out)
@@ -149,17 +149,22 @@ class AtMessages2
     else raise ArgumentError, "Invalid parameter argument supplied to build_rur_preds"
     end
     
-    case type
-    when :absolute then d.output
-    when :percentiles then d.output_percentiles
-    when :directed_percentiles then d.output_directed_percentiles
-    when :directed_onesided_percentiles then d.output_directed_onesided_percentiles
-    when :directed_v_percentiles then d.output_directed_v_percentiles
-    else raise ArgumentError, "Invalid type argument supplied to build_rur_preds"
+    if not filter_name    
+      case type
+      when :absolute then d.output
+      when :percentiles then d.output_percentiles
+      when :directed_percentiles then d.output_directed_percentiles
+      when :directed_onesided_percentiles then d.output_directed_onesided_percentiles
+      when :directed_v_percentiles then d.output_directed_v_percentiles
+      else raise ArgumentError, "Invalid type argument supplied to build_rur_preds"
+      end
+    else
+      # TODO Filters now only work for the directed case! Make them work for the other cases!
+      d.output_directed_percentiles(filter_name)
     end
   end
   
-  def build_rur_prediction_plot(parameter=:degree, type=:absolute)
+  def build_rur_prediction_plot(parameter=:degree, type=:absolute, filter_name=nil)
     constants = case parameter
     when :indegree then ReciprocityHeuristics::Degree.constants(@c,:in)
     when :outdegree then ReciprocityHeuristics::Degree.constants(@c,:out)
@@ -187,11 +192,11 @@ class AtMessages2
     else raise ArgumentError, "Invalid parameter supplied to build_rur_prediction_plot"
     end
     
-    plot_stuff(constants, type, false)
-    plot_stuff(constants, type, true)
+    plot_stuff(constants, type, false, filter_name)
+    plot_stuff(constants, type, true, filter_name)
   end
   
-  def plot_stuff(c, type, opp=false)
+  def plot_stuff(c, type, opp=false, filter_name=nil)
     eblock = Proc.new do |i,filename|
       if not File.exists?(filename)
         puts "File #{filename} doesn't exist!"
@@ -233,7 +238,7 @@ class AtMessages2
         imagefile = case type
           when :absolute then c.image_filename_opp(i)
           when :percentiles then c.pimage_filename_opp(i)
-          when :directed_percentiles then c.dir_pimage_filename_opp(i)
+          when :directed_percentiles then c.dir_pimage_filename_opp(i, filter_name)
           when :directed_onesided_percentiles then c.diro_pimage_filename_opp(i)
           when :directed_v_percentiles then c.dirv_pimage_filename_opp(i)
           else raise ArgumentError, "Invalid imagefile parameter"
@@ -242,7 +247,7 @@ class AtMessages2
         imagefile = case type
           when :absolute then c.image_filename(i)
           when :percentiles then c.pimage_filename(i)
-          when :directed_percentiles then c.dir_pimage_filename(i)
+          when :directed_percentiles then c.dir_pimage_filename(i, filter_name)
           when :directed_onesided_percentiles then c.diro_pimage_filename(i)
           when :directed_v_percentiles then c.dirv_pimage_filename(i)
           else raise ArgumentError, "Invalid imagefile parameter"
@@ -256,7 +261,7 @@ class AtMessages2
       case type
       when :absolute then c.filename_opp_block &eblock
       when :percentiles then c.pfilename_opp_block &eblock
-      when :directed_percentiles then c.dir_pfilename_opp_block &eblock
+      when :directed_percentiles then c.dir_pfilename_opp_block(filter_name, &eblock)
       when :directed_onesided_percentiles then c.diro_pfilename_opp_block &eblock
       when :directed_v_percentiles then c.dirv_pfilename_opp_block &eblock
       else raise ArgumentError, "Invalid type argument supplied"
@@ -265,7 +270,7 @@ class AtMessages2
       case type
       when :absolute then c.filename_block &eblock
       when :percentiles then c.pfilename_block &eblock
-      when :directed_percentiles then c.dir_pfilename_block &eblock
+      when :directed_percentiles then c.dir_pfilename_block(filter_name, &eblock)
       when :directed_onesided_percentiles then c.diro_pfilename_block &eblock
       when :directed_v_percentiles then c.dirv_pfilename_block &eblock
       else raise ArgumentError, "Invalid type argument supplied"
@@ -302,31 +307,77 @@ class AtMessages2
     end
   end
   
-  # Calculate number of edges in each reciprocated/unreciprocated subgraph
-  # Each line is "threshold, reciprocated graph edge count, unreciprocated
-  # graph edge count, ratio of rec graph count to unrec graph count"
-  def build_rur_edge_count
-    File.open(@c.rur_edge_count+"~", "w") do |f|    
-      @c.reciprocated_norep do |i, rec_norep_filename|
-        unr_filename = @c.unreciprocated(i)
-        rcount, ucount = 0, 0
-        File.open(rec_norep_filename, "r") do |f|
-          while f.gets
+  # Filter the reciprocated and unreciprocated subgraphs
+  # Provide a symbol corresponding to the name of the filter and
+  # provide a block that takes 2 arguments (IDs of nodes of an edge)
+  # that returns true or false
+  def filter_rur_graphs_by_feature(filter_name)
+    raise "Please provide a filter function as a block!" if not block_given?
+    # Iterate through reciprocated and filter
+    puts "Filtering Rec by #{filter_name.to_s}..."
+    @c.reciprocated_norep do |i,rec_filename|
+      rec_new = Constant.new(@c,"rec_"+filter_name.to_s).filename(i)
+      File.open(rec_new+"~", "w") do |f|
+        File.open(rec_filename,"r").each do |l|
+          id1,id2 = l.split.map!{|v| v.to_i }
+          if yield(id1,id2)
+            f.puts "#{id1} #{id2}"
           end
-          rcount = ($_ == "") ? $. - 1 : $.
         end
-        File.open(unr_filename, "r") do |f|
-          while f.gets
-          end
-          ucount = ($_ == "") ? $. - 1 : $.
-        end
-        rcount = 0 if File.zero?(rec_norep_filename)
-        ucount = 0 if File.zero?(unr_filename)
-        f.puts "#{i} #{rcount} #{ucount} #{rcount.to_f/ucount.to_f}"
       end
+      File.rename(rec_new+"~",rec_new)
     end
-    File.rename(@c.rur_edge_count+"~",@c.rur_edge_count)
+    
+    # Iterate through unreciprocated and filter
+    puts "Filtering Unrec by #{filter_name.to_s}..."
+    @c.unreciprocated do |i,unr_filename|
+      unr_new = Constant.new(@c,"unr_"+filter_name.to_s).filename(i)
+      File.open(unr_new+"~", "w") do |f|
+        File.open(unr_filename,"r").each do |l|
+          id1,id2 = l.split.map!{|v| v.to_i }
+          if yield(id1,id2)
+            f.puts "#{id1} #{id2}"
+          end
+        end
+      end
+      File.rename(unr_new+"~",unr_new)
+    end
   end
+  
+  # Filter the reciprocated and unreciprocated subgraphs by same indegree
+  # I.e. for every edge (v,w), indegree(v) == indegree(w)
+  def filter_rur_graph_by_indegree
+    indegrees = Processor.to_hash_float(@c.degrees)
+    filter_rur_graphs_by_feature(:indegree) do |v,w|
+      indegrees[v] == indegrees[w]
+    end
+  end
+  
+  # # Calculate number of edges in each reciprocated/unreciprocated subgraph
+  # # Each line is "threshold, reciprocated graph edge count, unreciprocated
+  # # graph edge count, ratio of rec graph count to unrec graph count"
+  # def build_rur_edge_count
+  #   File.open(@c.rur_edge_count+"~", "w") do |f|    
+  #     @c.reciprocated_norep do |i, rec_norep_filename|
+  #       unr_filename = @c.unreciprocated(i)
+  #       rcount, ucount = 0, 0
+  #       File.open(rec_norep_filename, "r") do |f|
+  #         while f.gets
+  #         end
+  #         rcount = ($_ == "") ? $. - 1 : $.
+  #       end
+  #       File.open(unr_filename, "r") do |f|
+  #         while f.gets
+  #         end
+  #         ucount = ($_ == "") ? $. - 1 : $.
+  #       end
+  #       rcount = 0 if File.zero?(rec_norep_filename)
+  #       ucount = 0 if File.zero?(unr_filename)
+  #       f.puts "#{i} #{rcount} #{ucount} #{rcount.to_f/ucount.to_f}"
+  #     end
+  #   end
+  #   File.rename(@c.rur_edge_count+"~",@c.rur_edge_count)
+  # end
   
   # Calculate the number of messages each person received in the subgraph
   def build_message_count

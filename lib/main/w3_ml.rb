@@ -66,6 +66,15 @@ when 41
 when 42
   puts "Generating VW Decision Tree for #{k}"
   am.decision_tree_generate(k,"vw")
+when 51
+  puts "Generating Filtered Indegree CSV for #{k}"
+  am.generate_csv_files_indegree(k)
+when 52
+  puts "Generating Filtered Indegree Decision Tree for #{k}"
+  am.decision_tree_generate(k,"indegree")
+when 100
+  puts "Generating Combined (vw,paths,link) Decision Tree for #{k}"
+  am.decision_tree_generate_rev(k,"all2x")
 when 101
   puts "Generating Combined Decision Tree for #{k}"
   am.decision_tree_generate_rev(k,"all2")

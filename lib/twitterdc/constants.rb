@@ -146,6 +146,10 @@ module TwitterDc
       base_n_k("decedges_yaml",eye, &block)
     end
     
+    def decision_edges_filter(filter_name, eye=@k, &block)
+      base_n_k("decedges_yaml_"+filter_name.to_s,eye, &block)
+    end
+    
     def scc_of_unreciprocated_image
       @base+"/images/"+sprintf("%03d",@n)+"_"+sprintf("%03d",@k)+"-"+sprintf("%03d",@k2)+"_unr_scc.png"
     end

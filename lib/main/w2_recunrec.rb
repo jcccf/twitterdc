@@ -27,6 +27,9 @@ when 3
 when 4
   puts "Building the Rec/Unrec Outdegree Plots for each person"
   am.build_rur_outdegrees_plot
+when 5 # Requires Stage 1
+  puts "Filtering by Rec/Unrec Graphs Indegree"
+  am.filter_rur_graph_by_indegree
 when 10
   puts "Building Weakly Connected Components for the Unrec Subgraphs"
   am.build_unrec_connected_components

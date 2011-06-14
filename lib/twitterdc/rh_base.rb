@@ -118,21 +118,29 @@ module TwitterDc
         end
       end
   
-      def base_output_directed_percentiles_100 &edge_block
+      # Provide an edge_block that takes 3 arguments (e1, e2, type)
+      def base_output_directed_percentiles_100(filter_name = nil)
         @c.unreciprocated do |i,unr_filename|
-          outfile = @constants.dir_pfilename(i)
-          outfile_opp = @constants.dir_pfilename_opp(i)
-          edges = Helpers.read_rur_edges(unr_filename, @c.reciprocated_norep(i), true, true)
+          
+          # Pick filter-specific rec/unrec subgraphs if needed
+          uf, rf = unr_filename, @c.reciprocated_norep(i)
+          if filter_name
+            uf, rf = Constant.new(@c,"unr_"+filter_name.to_s).filename(i), Constant.new(@c,"rec_"+filter_name.to_s).filename(i)
+          end
+          
+          outfile = @constants.dir_pfilename(i,filter_name)
+          outfile_opp = @constants.dir_pfilename_opp(i,filter_name)
+          edges = Helpers.read_rur_edges(uf, rf, true, true)
           p = ReciprocityHeuristics::Classifier.new
           edgevals = {}
           edges.each do |e1,e2,type|
-            edgevals[[e1,e2]] = edge_block.call(e1,e2,type)
+            edgevals[[e1,e2]] = yield(e1,e2,type)
           end
       
           p.percentiles100(:a, edgevals)
           
           # Print percentile transitions
-          File.open(@constants.dir_pfilename_trans(i),"w") do |f|
+          File.open(@constants.dir_pfilename_trans(i,filter_name),"w") do |f|
             p.print_transitions(f)
           end
       
@@ -291,9 +299,9 @@ module TwitterDc
         end
       end
   
-      def output_directed_percentiles
+      def output_directed_percentiles(filter_name = nil)
         clear_cache
-        base_output_directed_percentiles_100 do |e1,e2,type|
+        base_output_directed_percentiles_100(filter_name) do |e1,e2,type|
           #puts "For dir #{e1} #{e2} #{type} value is #{r}"
           r = @cache[e1][e2]
           r ||= (@cache[e1][e2] = hlp_directed(e1,e2,type))

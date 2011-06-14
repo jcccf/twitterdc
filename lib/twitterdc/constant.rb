@@ -42,29 +42,46 @@ module TwitterDc
     end
     
     # Prediction given a directed edge, separating into percentiles
-    def dir_pfilename(k)
-      sprintf("%s/%03d_%03d_%s_dir_pct.%s", @c.base, @c.n, k, @name_extras, "txt")
+    # f is the filter used, by default nil (like same indegree, etc.)
+    def dir_pfilename(k,f=nil)
+      if f
+        sprintf("%s/%03d_%03d_%s_dir_pct_%s.%s", @c.base, @c.n, k, @name_extras, f.to_s, "txt")
+      else
+        sprintf("%s/%03d_%03d_%s_dir_pct.%s", @c.base, @c.n, k, @name_extras, "txt")
+      end
     end
     
-    def dir_pfilename_trans(k)
-      sprintf("%s/%03d_%03d_%s_dir_pct_trans.%s", @c.base, @c.n, k, @name_extras, "txt")
+    def dir_pfilename_trans(k,f=nil)
+      if f
+        sprintf("%s/%03d_%03d_%s_dir_pct_trans_%s.%s", @c.base, @c.n, k, @name_extras, f.to_s, "txt")
+      else
+        sprintf("%s/%03d_%03d_%s_dir_pct_trans.%s", @c.base, @c.n, k, @name_extras, "txt")
+      end
     end
 
-    def dir_pimage_filename(k)
-      sprintf("%s/%03d_%03d_%s_dir_pct.%s", @c.base+"/images", @c.n, k, @name_extras, "png")
+    def dir_pimage_filename(k,f=nil)
+      if f
+        sprintf("%s/%03d_%03d_%s_dir_pct_%s.%s", @c.base+"/images", @c.n, k, @name_extras, f.to_s, "png")
+      else
+        sprintf("%s/%03d_%03d_%s_dir_pct.%s", @c.base+"/images", @c.n, k, @name_extras, "png")
+      end
     end
     
     # Prediction given a directed edge, separating into percentiles
-    def dir_pfilename_opp(k)
-      sprintf("%s/%03d_%03d_%s_dir_pct_opp.%s", @c.base, @c.n, k, @name_extras, "txt")
-    end
-    
-    def dir_pfilename_trans_opp(k)
-      sprintf("%s/%03d_%03d_%s_dir_pct_trans_opp.%s", @c.base, @c.n, k, @name_extras, "txt")
+    def dir_pfilename_opp(k,f=nil)
+      if f
+        sprintf("%s/%03d_%03d_%s_dir_pct_opp_%s.%s", @c.base, @c.n, k, @name_extras, f.to_s, "txt")
+      else
+        sprintf("%s/%03d_%03d_%s_dir_pct_opp.%s", @c.base, @c.n, k, @name_extras, "txt")
+      end
     end
 
-    def dir_pimage_filename_opp(k)
-      sprintf("%s/%03d_%03d_%s_dir_pct_opp.%s", @c.base+"/images", @c.n, k, @name_extras, "png")
+    def dir_pimage_filename_opp(k,f=nil)
+      if f
+        sprintf("%s/%03d_%03d_%s_dir_pct_opp_%s.%s", @c.base+"/images", @c.n, k, @name_extras, f.to_s, "png")
+      else
+        sprintf("%s/%03d_%03d_%s_dir_pct_opp.%s", @c.base+"/images", @c.n, k, @name_extras, "png")
+      end
     end
     
     # Prediction given a directed edge and only using one side (w), separating into percentiles
@@ -143,18 +160,26 @@ module TwitterDc
       end
     end
     
-    def dir_pfilename_block
+    def dir_pfilename_block(f=nil)
       raise "No block provided!" unless block_given?
       @c.k.upto(@c.k2) do |i|
-        filename = sprintf("%s/%03d_%03d_%s_dir_pct.%s", @c.base, @c.n, i, @name_extras, "txt")
+        if f
+          filename = sprintf("%s/%03d_%03d_%s_dir_pct_%s.%s", @c.base, @c.n, i, @name_extras, f.to_s, "txt")
+        else
+          filename = sprintf("%s/%03d_%03d_%s_dir_pct.%s", @c.base, @c.n, i, @name_extras, "txt")
+        end
         yield i, filename
       end
     end
     
-    def dir_pfilename_opp_block
+    def dir_pfilename_opp_block(f=nil)
       raise "No block provided!" unless block_given?
       @c.k.upto(@c.k2) do |i|
-        filename = sprintf("%s/%03d_%03d_%s_dir_pct_opp.%s", @c.base, @c.n, i, @name_extras, "txt")
+        if f
+          filename = sprintf("%s/%03d_%03d_%s_dir_pct_opp_%s.%s", @c.base, @c.n, i, @name_extras, f.to_s, "txt")
+        else
+          filename = sprintf("%s/%03d_%03d_%s_dir_pct_opp.%s", @c.base, @c.n, i, @name_extras, "txt")
+        end
         yield i, filename
       end
     end
