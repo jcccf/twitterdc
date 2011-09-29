@@ -356,7 +356,7 @@ class AtMessages2
   # # Calculate number of edges in each reciprocated/unreciprocated subgraph
   # # Each line is "threshold, reciprocated graph edge count, unreciprocated
   # # graph edge count, ratio of rec graph count to unrec graph count"
-  # def build_rur_edge_count
+  # def build_rur_edge_count_all
   #   File.open(@c.rur_edge_count+"~", "w") do |f|    
   #     @c.reciprocated_norep do |i, rec_norep_filename|
   #       unr_filename = @c.unreciprocated(i)

@@ -146,6 +146,10 @@ module TwitterDc
       base_n_k("decedges_yaml",eye, &block)
     end
     
+    def decision_edges_balanced(eye=@k, &block)
+      base_n_k("decedges_yaml_bal",eye, &block)
+    end
+    
     def decision_edges_filter(filter_name, eye=@k, &block)
       base_n_k("decedges_yaml_"+filter_name.to_s,eye, &block)
     end

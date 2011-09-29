@@ -42,6 +42,13 @@ when 9
 when 10
   puts "Generating Combined (vw,paths,link) Decision Tree for #{k}"
   am.decision_tree_generate(k,"all2x")
+when 1001
+	puts "Combining All Cheap..."
+	am.generate_csv_files_from_parts(k, "allcheap", ['simple','paths','pref','vw'])
+	puts "Generating Combined All Cheap Decision Tree for #{k}"
+  am.decision_tree_generate(k,"allcheap")
+when 1002
+	am.decision_tree_generate_rev(k,"allcheap")
 when 11
   puts "Generating Simple CSV for #{k}"
   am.generate_csv_files_simple(k)
@@ -60,6 +67,12 @@ when 31
 when 32
   puts "Generating Links Decision Tree for #{k}"
   am.decision_tree_generate(k,"link")
+when 33
+  puts "Generating Pref CSV for #{k}"
+  am.generate_csv_files_pref(k)
+when 34
+  puts "Generating Pref Decision Tree for #{k}"
+  am.decision_tree_generate(k,"pref")
 when 41
   puts "Generating VW CSV for #{k}"
   am.generate_csv_files_vw(k)
@@ -72,6 +85,26 @@ when 51
 when 52
   puts "Generating Filtered Indegree Decision Tree for #{k}"
   am.decision_tree_generate(k,"indegree")
+when 53
+  puts "Generating REV Filtered Indegree Decision Tree for #{k}"
+  am.decision_tree_generate_rev(k,"indegree")
+when 61
+  puts "Generating CSVs for Balanced #{k}"
+  am.generate_csv_files_paths(k,true)
+  am.generate_csv_files_simple(k,true)
+  am.generate_csv_files_link(k,true)
+  am.generate_csv_files_vw(k,true)
+when 62
+  puts "Combining and Generating Combined All2Bal Decision Tree for #{k}"
+  am.generate_csv_files_from_parts(k, "all2bal", ['simple_bal','paths_bal','link_bal', 'vw_bal'])
+  am.decision_tree_generate(k,"all2bal")
+  am.decision_tree_generate_rev(k,"all2bal")
+when 63
+  puts "Combining and Generating Combined Simple, Path Decision Tree for #{k}"
+  am.decision_tree_generate(k,"simple_bal")
+  am.decision_tree_generate_rev(k,"simple_bal")
+  am.decision_tree_generate(k,"paths_bal")
+  am.decision_tree_generate_rev(k,"paths_bal")
 when 100
   puts "Generating Combined (vw,paths,link) Decision Tree for #{k}"
   am.decision_tree_generate_rev(k,"all2x")

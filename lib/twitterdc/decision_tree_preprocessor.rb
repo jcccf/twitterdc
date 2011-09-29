@@ -22,8 +22,10 @@ module TwitterDc
       @names << name
       vals = {}
       puts "Calculating values for #{name.to_s}..."
-      @edges.each do |e1,e2,type|
-        vals[[e1,e2]] = fun.result_directed(e1,e2,type)
+      ExecutionTime.to_file("%s/time_%d_%d_%s_for.txt" % [@c.base, @c.n, @c.k, name.to_s]) do
+				@edges.each do |e1,e2,type|
+					vals[[e1,e2]] = fun.result_directed(e1,e2,type)
+				end
       end
       puts "Classifying values for #{name.to_s}..."
       @classifier.percentiles(name,vals)
@@ -34,8 +36,10 @@ module TwitterDc
       @names << name
       vals = {}
       puts "Calculating values for #{name.to_s}..."
-      @edges.each do |e1,e2,type|
-        vals[[e1,e2]] = fun.result(e1,e2,type)
+      ExecutionTime.to_file("%s/time_%d_%d_%s_for_sym.txt" % [@c.base, @c.n, @c.k, name.to_s]) do
+				@edges.each do |e1,e2,type|
+					vals[[e1,e2]] = fun.result(e1,e2,type)
+				end
       end
       puts "Classifying values for #{name.to_s}..."
       @classifier.percentiles(name,vals)
@@ -46,8 +50,10 @@ module TwitterDc
       @names << name
       vals = {}
       puts "Calculating values for #{name.to_s}..."
-      @edges.each do |e1,e2,type|
-        vals[[e1,e2]] = fun.result_directed_onesided(e1,e2,type)
+      ExecutionTime.to_file("%s/time_%d_%d_%s_for_w.txt" % [@c.base, @c.n, @c.k, name.to_s]) do
+				@edges.each do |e1,e2,type|
+					vals[[e1,e2]] = fun.result_directed_onesided(e1,e2,type)
+				end
       end
       puts "Classifying values for #{name.to_s}..."
       @classifier.percentiles(name,vals)
@@ -58,8 +64,10 @@ module TwitterDc
       @names << name
       vals = {}
       puts "Calculating values for #{name.to_s}..."
-      @edges.each do |e1,e2,type|
-        vals[[e1,e2]] = fun.result_directed_v(e1,e2,type)
+			ExecutionTime.to_file("%s/time_%d_%d_%s_for_v.txt" % [@c.base, @c.n, @c.k, name.to_s]) do
+				@edges.each do |e1,e2,type|
+					vals[[e1,e2]] = fun.result_directed_v(e1,e2,type)
+				end
       end
       puts "Classifying values for #{name.to_s}..."
       @classifier.percentiles(name,vals)

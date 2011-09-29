@@ -20,17 +20,18 @@ class AtMessages3
   #   @edges = ReciprocityHeuristics::Helpers.read_rur_edges(@c.unreciprocated(3), @c.reciprocated_norep(3), false).sort_by{rand}
   # end
   
-  def get_edges(i)
-    if File.exist?(@c.decision_edges(i))
+  def get_edges(i,balanced=false)
+    edge_file = balanced ? @c.decision_edges_balanced(i) : @c.decision_edges(i)
+    if File.exist?(edge_file)
       edges = nil
-      File.open(@c.decision_edges(i),"r") do |f|
+      File.open(edge_file,"r") do |f|
         edges = YAML::load(f)
       end
       raise "File is empty???" if edges == nil
       edges
     else
-      edges = ReciprocityHeuristics::Helpers.read_rur_edges(@c.unreciprocated(i), @c.reciprocated_norep(i), false).sort_by{rand}
-      File.open(@c.decision_edges(i),"w") do |f|
+      edges = ReciprocityHeuristics::Helpers.read_rur_edges(@c.unreciprocated(i), @c.reciprocated_norep(i), balanced).sort_by{rand}
+      File.open(edge_file,"w") do |f|
         f.puts edges.to_yaml
       end
       edges
@@ -39,7 +40,7 @@ class AtMessages3
   
   def get_edges_with_filter(i,filter_name)
     uf, rf = Constant.new(@c,"unr_"+filter_name.to_s).filename(i), Constant.new(@c,"rec_"+filter_name.to_s).filename(i)
-    dec_edges = @c.decision_edges_filter(i)
+    dec_edges = @c.decision_edges_filter(filter_name.to_s,i)
     if File.exist?(dec_edges)
       edges = nil
       File.open(dec_edges,"r") do |f|
@@ -48,7 +49,7 @@ class AtMessages3
       raise "File is empty???" if edges == nil
       edges
     else
-      edges = ReciprocityHeuristics::Helpers.read_rur_edges(uf, rf, false).sort_by{rand}
+      edges = ReciprocityHeuristics::Helpers.read_rur_edges(uf, rf, true).sort_by{rand} # Get balanced
       File.open(dec_edges,"w") do |f|
         f.puts edges.to_yaml
       end
@@ -56,8 +57,8 @@ class AtMessages3
     end
   end
   
-  def generate_csv_files_vw(i)
-    edges = get_edges(i)
+  def generate_csv_files_vw(i,balanced=false)
+    edges = get_edges(i,balanced)
     p_degrees = Processor.to_hash_float(@c.degrees) # In-degree of each edge
     p_outdegrees = Processor.to_hash_float(@c.degrees, 0, 2) # Out-degree of each edge
     p_inoutdegrees = Processor.to_hash_float_block(@c.degrees, 0, 1, 2) { |indeg,outdeg| outdeg/indeg } # Out-degree/In-degree of each node
@@ -65,7 +66,8 @@ class AtMessages3
     p_outmsgs = Processor.to_hash_float(@c.people_msg, 0, 2) # Out-message count of each edge
     p_msgedges = Processor.to_tuple_hash_float(@c.rur_msg_edges(@c.k))
     
-    dtp = dtp = DecisionTreePreprocessor.new(@c, i, "vw", edges)
+    name = balanced ? "vw_bal" : "vw"
+    dtp = dtp = DecisionTreePreprocessor.new(@c, i, name, edges)
     dtp.percentiles_for_v(:indegree_v,ReciprocityHeuristics::DegreeDecision.new(@c,p_degrees,:in))
     dtp.percentiles_for_v(:outdegree_v,ReciprocityHeuristics::DegreeDecision.new(@c,p_outdegrees,:out))
     dtp.percentiles_for_v(:inoutdegree_v,ReciprocityHeuristics::OutdegreePerIndegreeDecision.new(@c,p_degrees,p_outdegrees))
@@ -83,8 +85,8 @@ class AtMessages3
     dtp.output
   end
   
-  def generate_csv_files_simple(i)
-    edges = get_edges(i)
+  def generate_csv_files_simple(i,balanced=false)
+    edges = get_edges(i,balanced)
     #edges = @edges
     p_degrees = Processor.to_hash_float(@c.degrees) # In-degree of each edge
     p_outdegrees = Processor.to_hash_float(@c.degrees, 0, 2) # Out-degree of each edge
@@ -93,7 +95,8 @@ class AtMessages3
     p_outmsgs = Processor.to_hash_float(@c.people_msg, 0, 2) # Out-message count of each edge
     p_msgedges = Processor.to_tuple_hash_float(@c.rur_msg_edges(@c.k))
     
-    dtp = DecisionTreePreprocessor.new(@c, i, "simple", edges)
+    name = balanced ? "simple_bal" : "simple"
+    dtp = DecisionTreePreprocessor.new(@c, i, name, edges)
     dtp.percentiles_for(:indegree,ReciprocityHeuristics::DegreeDecision.new(@c,p_degrees,:in))
     dtp.percentiles_for(:outdegree,ReciprocityHeuristics::DegreeDecision.new(@c,p_outdegrees,:out))
     dtp.percentiles_for(:inoutdegree,ReciprocityHeuristics::OutdegreePerIndegreeDecision.new(@c,p_degrees,p_outdegrees))
@@ -104,11 +107,13 @@ class AtMessages3
     dtp.output    
   end
   
-  def generate_csv_files_paths(i)
-    edges = get_edges(i)
+  def generate_csv_files_paths(i,balanced=false)
+    edges = get_edges(i,balanced)
     p_edges = Processor.to_hash_array(@c.edges, 1, 0) # List of in-neighbors
     p_outedges = Processor.to_hash_array(@c.edges, 0, 1)
-    dtp = DecisionTreePreprocessor.new(@c, i, "paths", edges)
+    
+    name = balanced ? "paths_bal" : "paths"
+    dtp = DecisionTreePreprocessor.new(@c, i, name, edges)
     dtp.percentiles_for(:mutual_abs_in,ReciprocityHeuristics::MutualAbsoluteDecision.new(@c,p_edges,:in))
     dtp.percentiles_for(:mutual_abs_out,ReciprocityHeuristics::MutualAbsoluteDecision.new(@c,p_outedges,:out))
     dtp.percentiles_for_sym(:katz_a_b, ReciprocityHeuristics::KatzNStepDirectedDecision.new(@c,p_outedges))
@@ -116,19 +121,32 @@ class AtMessages3
     dtp.output
   end
   
-  def generate_csv_files_link(i)
-    edges = get_edges(i)
+  def generate_csv_files_link(i,balanced=false)
+    edges = get_edges(i,balanced)
     p_degrees = Processor.to_hash_float(@c.degrees) # In-degree of each edge
     p_outdegrees = Processor.to_hash_float(@c.degrees, 0, 2) # Out-degree of each edge
     p_edges = Processor.to_hash_array(@c.edges, 1, 0) # List of in-neighbors
     p_outedges = Processor.to_hash_array(@c.edges, 0, 1)
     
-    dtp = DecisionTreePreprocessor.new(@c, i, "link", edges)
+    name = balanced ? "link_bal" : "link"
+    dtp = DecisionTreePreprocessor.new(@c, i, name, edges)
     dtp.percentiles_for(:katz_out,ReciprocityHeuristics::KatzNStepDecision.new(@c,p_outedges))
     dtp.percentiles_for(:jaccard_in,ReciprocityHeuristics::MutualJaccardDecision.new(@c,p_edges,:in))
     dtp.percentiles_for(:jaccard_out,ReciprocityHeuristics::MutualJaccardDecision.new(@c,p_edges,:out))
     dtp.percentiles_for(:adamic,ReciprocityHeuristics::MutualInAdamicDecision.new(@c,p_outdegrees,p_edges))
     dtp.percentiles_for(:prefattach_vw,ReciprocityHeuristics::PreferentialAttachmentDecision.new(@c,p_degrees,:v_to_w))
+    dtp.percentiles_for(:prefattach_wv,ReciprocityHeuristics::PreferentialAttachmentDecision.new(@c,p_outdegrees,:w_to_v))
+    dtp.output
+  end
+  
+  def generate_csv_files_pref(i,balanced=false)
+  	edges = get_edges(i,balanced)
+    p_degrees = Processor.to_hash_float(@c.degrees) # In-degree of each edge
+    p_outdegrees = Processor.to_hash_float(@c.degrees, 0, 2) # Out-degree of each edge
+    
+    name = balanced ? "pref_bal" : "pref"
+    dtp = DecisionTreePreprocessor.new(@c, i, name, edges)
+  	dtp.percentiles_for(:prefattach_vw,ReciprocityHeuristics::PreferentialAttachmentDecision.new(@c,p_degrees,:v_to_w))
     dtp.percentiles_for(:prefattach_wv,ReciprocityHeuristics::PreferentialAttachmentDecision.new(@c,p_outdegrees,:w_to_v))
     dtp.output
   end
@@ -168,8 +186,6 @@ class AtMessages3
   
   def generate_csv_files_indegree(i)
     edges = get_edges_with_filter(i,:indegree)
-    puts "SUPEREDGES"
-    puts edges
     p_degrees = Processor.to_hash_float(@c.degrees) # In-degree of each edge
     p_outdegrees = Processor.to_hash_float(@c.degrees, 0, 2) # Out-degree of each edge
     #p_inoutdegrees = Processor.to_hash_float_block(@c.degrees, 0, 1, 2) { |indeg,outdeg| outdeg/indeg } # Out-degree/In-degree of each node

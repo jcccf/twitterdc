@@ -18,6 +18,10 @@ class TestDecisionTree < Test::Unit::TestCase
     @atm.find_degrees_edges
     @at2.rebuild_rec_graph
     @at2.build_message_count
+    puts "hi!"
+    @at2.build_rur_edge_count(3)
+    @at2.build_rur_edge_count(4)
+    @at2.build_rur_edge_count(5)
     @at2.filter_rur_graph_by_indegree
   end
   
@@ -60,6 +64,17 @@ class TestDecisionTree < Test::Unit::TestCase
   def test_indegree
     @at3.generate_csv_files_indegree(3)
     @at3.decision_tree_generate(3,"indegree")
+    @at3.generate_csv_files_simple(3)
+    @at3.decision_tree_generate(3,"indegree")
+  end
+  
+  def test_all2bal
+    @at3.generate_csv_files_simple(3,true)
+    @at3.generate_csv_files_paths(3,true)
+    @at3.generate_csv_files_link(3,true)
+    @at3.generate_csv_files_from_parts(3, "all2bal", ['simple_bal','paths_bal','link_bal'])
+    @at3.decision_tree_generate(3,"all2bal")
+    @at3.decision_tree_generate_rev(3,"all2bal")
   end
 
 end
